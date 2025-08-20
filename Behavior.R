@@ -20,3 +20,5 @@ behavior %>% summarize(.by = subject, trial = max(trial)) %>% filter(trial!=576)
 
 behavior %>% filter(event == "Response") %>% pull(Code) %>% as.integer() %>% summary()
 #TODO remap response keys to correct numbers (depending on paradigm)
+
+#TODO pivot_wider for calculating RT (and check exposition time)
