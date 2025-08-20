@@ -31,7 +31,7 @@
 ###############################################################################
 
 library(tidyverse)
-#rm(list=ls())
+#source("0 General.R")
 if (exists("allfixtab")) rm("allfixtab"); if (exists("allsactab")) rm("allsactab"); if (exists("allmsgtab")) rm("allmsgtab")
 
 distance = 650 #screen center to subject eyes in mm
@@ -56,16 +56,10 @@ toPhysString = function(x, width=2) formatC(x, width=width, format="d", flag="0"
 toPhysFileName = function(x, width=2, prefix="vp", postfix=".txt") x %>% toPhysString() %>% paste0(prefix, ., postfix)
 toCode = function(x, prefix="vp", postfix="") x %>% toPhysString() %>% paste0(prefix, ., postfix)
 
-path <- "C:/Data/AB_B1/Data/" #@work
-#path = path %>% gsub("C:/Data", "D:/Arbeit", .) #@home
-path.eye = "Eye/" %>% paste0(path, .)
-path.log = "log/" %>% paste0(path, .)
-savepath <- "Summary/" %>% paste0(path.eye, .)
-
 # One degree of visual angle amounts to how many pixels?
 winpix <- distance * tan(pi/180) * screen.width.px/screen.width.mm
 
-vpn <- list.files(path.eye, pattern=".txt", full.names = T)
+vpn <- list.files(path.eye.raw, pattern=".txt", full.names = T)
 for (vp in vpn) {
   #vp = head(vpn, 1)
   #vp = sample(vpn, 1)
@@ -198,13 +192,13 @@ for (vp in vpn) {
 }
 
 # Save results
-if (!file.exists(savepath)) dir.create(savepath)
+if (!file.exists(path.eye)) dir.create(path.eye)
 names(allmsgtab) <- c("RECORDING_SESSION_LABEL","TRIAL_LABEL","CURRENT_MSG_TIME","CURRENT_MSG_TEXT")
-write.table(allmsgtab,paste(savepath,"Messages.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
+write.table(allmsgtab,paste(path.eye,"Messages.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
 
 names(allfixtab) <- c("RECORDING_SESSION_LABEL","TRIAL_LABEL",
                       "CURRENT_FIX_START","CURRENT_FIX_END","CURRENT_FIX_X","CURRENT_FIX_Y")
-write.table(allfixtab,paste(savepath,"Fixations.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
+write.table(allfixtab,paste(path.eye,"Fixations.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
 
 # Code numeric to boolean
 allsactab$blink <- as.logical(allsactab[,ncol(allsactab)])
@@ -213,12 +207,12 @@ names(allsactab) <- c("RECORDING_SESSION_LABEL","TRIAL_LABEL",
                       "CURRENT_SAC_START_TIME","CURRENT_SAC_END_TIME",
                       "CURRENT_SAC_START_X","CURRENT_SAC_END_X","CURRENT_SAC_START_Y","CURRENT_SAC_END_Y",
                       "CURRENT_SAC_CONTAINS_BLINK")
-write.table(allsactab,paste(savepath,"Saccades.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
+write.table(allsactab,paste(path.eye,"Saccades.txt",sep=""),sep="\t",dec=",",quote=FALSE,row.names=FALSE)
 
 
 # Check Eye Calib ---------------------------------------------------------
-read_tsv(paste0(savepath, "Fixations.txt"), locale = locale(decimal_mark = ",")) %>% 
-  left_join(read_tsv(paste0(savepath, "Messages.txt"), locale = locale(decimal_mark = ",")), by = c("RECORDING_SESSION_LABEL", "TRIAL_LABEL")) %>% 
+read_tsv(paste0(path.eye, "Fixations.txt"), locale = locale(decimal_mark = ",")) %>% 
+  left_join(read_tsv(paste0(path.eye, "Messages.txt"), locale = locale(decimal_mark = ",")), by = c("RECORDING_SESSION_LABEL", "TRIAL_LABEL")) %>% 
   separate(CURRENT_MSG_TEXT, c("distractL", "targetL", NA, "distractR", "targetR"), sep = " ") %>% 
   mutate(angry = if_else(distractL %>% grepl("category1", .), "left", "right"),
          targetSide = if_else(targetL=="NA", "right", "left"),
