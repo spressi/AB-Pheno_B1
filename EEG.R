@@ -1,6 +1,7 @@
 library(tidyverse)
 #source("0 General.R")
 
+writeCorrectedMarkers = F #rewrite marker file for subjects with inverted markers (low voltage = signal instead of high)
 
 # Markers -----------------------------------------------------------------
 files.eeg.markers = list.files(path.eeg.raw, pattern = ".mrk", full.names = T) %>% 
@@ -16,9 +17,39 @@ eeg.markers = eeg.markers.list %>% bind_rows(.id = "subject") %>% tibble() %>%
   mutate(value = value %>% gsub("S\\s*", "", .) %>% as.integer(),
          paradigm = if_else(subject %>% grepl("a", .), "Dot Probe", "Dual Probe"))
 
-eeg.markers %>% filter(paradigm == "Dot Probe") %>% count(value) %>% arrange(n)
-eeg.markers %>% filter(paradigm == "Dual Probe") %>% count(value) %>% arrange(n)
+eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 
+#correct for inverted markers
+invertedMarkers = eeg.markers %>% count(subject) %>% filter(n > 1152) %>% pull(subject) #some subjects had inverted markers (low voltage = signal instead of high). Every reset of the pins thus resulted in an additional marker
+#eeg.markers %>% filter(subject %in% invertedMarkers) #255 is marker stop => recode as 255 - value
+eeg.markers = eeg.markers %>% 
+  mutate(value = if_else(subject %in% invertedMarkers, 255 - value, value)) %>% 
+  filter(value != 0) %>% #get rid of stop markers
+  #check assumption: first marker is always "Mk2" (last is "Mk2304")
+  #summarize(.by = subject, marker.min = first(marker), marker.max = last(marker)) %>% filter(marker.min != "Mk2=Stimulus" | marker.max != "Mk2304=Stimulus", subject %in% invertedMarkers)
+  mutate(.by = subject, trial = 1:n()) %>% 
+  #check assumption: only subjects with inverted markers are affected by wrong marker order
+  #mutate(markerCheck = paste0("Mk", trial+1, "=Stimulus")) %>% filter(markerCheck != marker) %>% pull(subject) %>% unique() %>% {. == invertedMarkers} %>% all()
+  mutate(marker = paste0("Mk", trial+1, "=Stimulus"), #this also overwrites correct markers but result has been asserted to be the same
+         output = paste(marker, paste0("S", value), sample, size, channel, sep = ","))
+#eeg.markers %>% filter(subject %in% invertedMarkers)
+eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
+  
+if (writeCorrectedMarkers) {
+  for (s in invertedMarkers) {
+    #s = sample(invertedMarkers, 1) #for testing
+    filename = files.eeg.markers %>% Filter(\(x) x %>% grepl(s, .), .)
+    filename.copy = filename %>% gsub(".vmrk", "_original.vmrk", ., fixed = T)
+    if (file.exists(filename.copy)==F) #careful! there is no option that prevents file.rename from overwriting an existing file => check yourself
+      file.rename(filename, filename.copy) #this retains "last modified" as the original file creation date
+    
+    file = readLines(filename.copy)
+    #file[12] #assert that line 12 is the last line that should remain unmodified
+    file = c(file[1:12],
+             eeg.markers %>% filter(subject == s) %>% pull(output))
+    writeLines(file, filename)
+  }
+}
 
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
