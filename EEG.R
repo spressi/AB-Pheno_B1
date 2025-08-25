@@ -5,7 +5,8 @@ writeCorrectedMarkers = F #rewrite marker file for subjects with inverted marker
 
 # Markers -----------------------------------------------------------------
 files.eeg.markers = list.files(path.eeg.raw, pattern = ".mrk", full.names = T) %>% 
-  Filter(\(x) x %>% grepl("_2", .) == F, .) #get rid of second file
+  Filter(\(x) x %>% grepl("_2", .) == F, .) %>% #get rid of second file
+  Filter(\(x) x %>% grepl("_original", .) == F, .) #get rid of original marker files (just backup for transparency)
 eeg.markers.list = list()
 for (file in files.eeg.markers) {
   #file = files.eeg.markers %>% sample(1) #for testing
@@ -44,7 +45,7 @@ if (writeCorrectedMarkers) {
       file.rename(filename, filename.copy) #this retains "last modified" as the original file creation date
     
     file = readLines(filename.copy)
-    #file[12] #assert that line 12 is the last line that should remain unmodified
+    #file[12] #assert that line 12 is the last line that should remain unmodified: Mk1=New Segment
     file = c(file[1:12],
              eeg.markers %>% filter(subject == s) %>% pull(output))
     writeLines(file, filename)
