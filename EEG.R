@@ -34,7 +34,18 @@ eeg.markers = eeg.markers %>%
   mutate(marker = paste0("Mk", trial+1, "=Stimulus"), #this also overwrites correct markers but result has been asserted to be the same
          output = paste(marker, paste0("S", value), sample, size, channel, sep = ","))
 #eeg.markers %>% filter(subject %in% invertedMarkers)
+
 eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
+#a07: only first block
+#a13: last trial missing in EEG
+
+# #check what happened to a13
+# list.files(path.seq, pattern = "a13", full.names = T) %>% Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training
+#   lapply(read_tsv) %>% bind_rows() %>% 
+#   mutate(trial = 1:n(), condition = condition + if_else(soa == 100, 5, 0)) %>% 
+#   select(trial, condition) %>% 
+#   filter(condition != eeg.markers %>% filter(subject == "a13", value %in% c(99, 96) == F) %>% pull(value) %>% c(NA))
+# #=> no mismatch across trials
   
 if (writeCorrectedMarkers) {
   for (s in invertedMarkers) {
