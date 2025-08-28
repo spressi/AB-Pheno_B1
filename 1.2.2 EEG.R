@@ -58,7 +58,7 @@ eeg.impedances = eeg.impedances.list %>% bind_rows(.id = "subject") %>%
 
 
 #sanity checks
-eeg.impedances %>% count(electrode) %>% count(n) %>% rename(files = n, electrodes = nn)
+eeg.impedances %>% count(electrode, name = "files") %>% count(files, name = "electrodes")
 eeg.impedances %>% filter(impedance %>% is.na()) %>% pull(subject_session) %>% unique() #TODO check NAs
 
 ##impedance change before/after
