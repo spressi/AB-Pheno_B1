@@ -82,7 +82,8 @@ behavior = behavior %>%
                                    response %>% is.na() ~ NA,
                                    response == target_left ~ "left",
                                    response == target_right ~ "right",
-                                   T ~ "incorrect") %>% as_factor() #wrong response (target not present)
+                                   T ~ "incorrect") %>% as_factor(), #wrong response (target not present)
+         congruency_dual = if_else(response_dual %>% as.character() == angry, "congruent", "incongruent") %>% as_factor() #note: in dual probe, this is the "response-congruency" (not a design parameter of the trial)
   ) %>%
   
   #times
