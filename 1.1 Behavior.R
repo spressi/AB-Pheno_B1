@@ -71,12 +71,19 @@ behavior = behavior %>%
          response = case_when(paradigm == "Dot Probe" ~ response - 1,
                               paradigm == "Dual Probe" ~ response - 3),
          response = if_else(response >= 5, response + 1, response), #5 key does not exist in Dual Probe => add 1
+         keyAssign = case_when(paradigm == "Dual Probe" ~ NA, #no key assignment for dual probe
+                               #only for dot probe:
+                               subject %>% gsub("\\D", "", .) %>% as.integer() %>% {. %% 2} == 1 ~ 1, #subject number odd: 1
+                               T ~ 2), #subject number even: 2
+         response_dotprobe = case_when(paradigm == "Dual Probe" ~ NA,
+                                 keyAssign == 1 ~ if_else(response==1, ":", "..") == targetKind_dotprobe,
+                                 T ~ if_else(response==1, "..", ":") == targetKind_dotprobe),
          response_dual = case_when(paradigm == "Dot Probe" ~ NA,
                                    response %>% is.na() ~ NA,
                                    response == target_left ~ "left",
                                    response == target_right ~ "right",
                                    T ~ "incorrect") %>% as_factor() #wrong response (target not present)
-         ) %>%
+  ) %>%
   
   #times
   mutate(rt = (time_response - time_target)/10, #response time in ms
@@ -93,19 +100,19 @@ behavior %>% summarize(.by = c(subject, paradigm), NA_n = sum(response %>% is.na
 #behavior %>% filter(response %>% is.na())
 
 #premature responses (i.e., before target onset)
-
 #behavior %>% summarize(.by = c(subject, paradigm), pre_n = sum(expositionCheck %>% is.na()), `pre_%` = mean(expositionCheck %>% is.na())) %>% summarize(.by = paradigm, across(starts_with("pre_"), list(m = mean, sd = sd)))
 behavior %>% summarize(.by = c(subject, paradigm), pre_n = sum(expositionCheck %>% is.na()), `pre_%` = mean(expositionCheck %>% is.na())) %>% filter(pre_n > 0)
 #behavior %>% filter(expositionCheck %>% is.na()) %>% select(subject:trial, rt, contains("time")) %>% mutate(rt2 = (time_response - time_distractors)/10)
 
-#wrong responses (Dual Probe)
-behavior %>% filter(paradigm == "Dual Probe") %>% summarize(.by = c(subject, paradigm), wrong_n = sum(response_dual == "incorrect", na.rm=T), `wrong_%` = mean(response_dual == "incorrect", na.rm=T)) %>% summarize(.by = paradigm, across(starts_with("wrong_"), list(m = mean, sd = sd)))
+#wrong responses
+behavior %>% filter(paradigm == "Dot Probe") %>% summarize(.by = c(subject, paradigm), wrong_n = sum(response_dotprobe == FALSE, na.rm=T), `wrong_%` = mean(response_dotprobe == FALSE, na.rm=T)) %>% summarize(.by = paradigm, across(starts_with("wrong_"), list(m = mean, sd = sd))) %>% 
+  bind_rows(behavior %>% filter(paradigm == "Dual Probe") %>% summarize(.by = c(subject, paradigm), wrong_n = sum(response_dual == "incorrect", na.rm=T), `wrong_%` = mean(response_dual == "incorrect", na.rm=T)) %>% summarize(.by = paradigm, across(starts_with("wrong_"), list(m = mean, sd = sd))))
 #behavior %>% filter(paradigm == "Dual Probe") %>% summarize(.by = c(subject, paradigm), wrong_n = sum(response_dual == "incorrect", na.rm=T), `wrong_%` = mean(response_dual == "incorrect", na.rm=T)) %>% filter(wrong_n > 0)
 
 #=> unusable trials
 behavior %>% summarize(.by = c(subject, paradigm), 
-                       missing_n = sum(response %>% is.na() | expositionCheck %>% is.na() | (paradigm == "Dual Probe" & response_dual == "incorrect")),
-                       `missing_%` = mean(response %>% is.na() | expositionCheck %>% is.na() | (paradigm == "Dual Probe" & response_dual == "incorrect"))) %>% 
+                       missing_n = sum(response %>% is.na() | expositionCheck %>% is.na() | (paradigm == "Dot Probe" & response_dotprobe == F) | (paradigm == "Dual Probe" & response_dual == "incorrect")),
+                       `missing_%` = mean(response %>% is.na() | expositionCheck %>% is.na() | (paradigm == "Dot Probe" & response_dotprobe == F) | (paradigm == "Dual Probe" & response_dual == "incorrect"))) %>% 
   summarize(.by = paradigm, across(starts_with("missing_"), list(m = mean, sd = sd)))
 
 
@@ -113,6 +120,7 @@ behavior %>% summarize(.by = c(subject, paradigm),
 behavior %>% summarize(.by = paradigm,
                        SOA = mean(SOA == "100", na.rm=T),
                        angry = mean(angry == "left", na.rm=T),
+                       #only for dot probe:
                        target_dp = mean(target_dotprobe == "left", na.rm=T),
                        targetKind_dp = mean(targetKind_dotprobe == ":", na.rm=T),
                        congruency_dp = mean(congruency_dotprobe == "congruent", na.rm=T))
@@ -134,5 +142,4 @@ behavior %>% summarize(response_dual_left = mean(response_dual == "left", na.rm=
 # Analysis ----------------------------------------------------------------
 behavior.valid = behavior %>% filter(response %>% is.na() == F,
                                      expositionCheck %>% is.na() == F,
-                                     (paradigm == "Dot Probe" | #take all remaining Dot Probe trials
-                                        response_dual != "incorrect")) #and all correct Dual Probe trials
+                                     response_dotprobe != F | response_dual != "incorrect") #kick out incorrect responses
