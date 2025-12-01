@@ -68,6 +68,7 @@ eeg.impedances %>% filter(impedance %>% is.na()) %>% pull(subject_session) %>% u
 #   t.test(before, after, paired=T)
 # ) %>% apa::t_apa(es_ci=T)
 eeg.impedances %>% summarize(.by = c(subject, time),
-                             impedance = mean(impedance, na.rm=T))
+                             impedance = mean(impedance, na.rm=T)) %>% 
+  pivot_wider(names_from = time, values_from = impedance) %>% filter(before != after)
 #just saving another file does not work to measure impedances after experiment :(
 # => need to click on impedance measurement again; otherwise previous values will just get carried over
