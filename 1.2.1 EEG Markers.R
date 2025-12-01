@@ -2,7 +2,7 @@ library(tidyverse)
 #source("0 General.R")
 #source("1.1 Behavior.R")
 
-writeCorrectedMarkers = F #rewrite marker file for subjects with inverted markers (low voltage = signal instead of high)
+writeCorrectedMarkers = T #rewrite marker file for subjects with inverted markers (low voltage = signal instead of high)
 
 files.eeg.markers = list.files(path.eeg.raw, pattern = ".mrk", full.names = T) %>% 
   Filter(\(x) x %>% grepl("_2", .) == F, .) %>% #get rid of second file
