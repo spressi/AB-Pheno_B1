@@ -97,5 +97,6 @@ if (writeCorrectedMarkers) {
     file = c(file[1:12],
              eeg.markers %>% filter(subject == s) %>% pull(output))
     writeLines(file, filename)
+    cat(paste0(s, ": Adjusted marker file created."))
   }
 }
