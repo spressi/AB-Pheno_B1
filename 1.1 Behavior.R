@@ -54,7 +54,7 @@ behavior = behavior %>%
          target_dotprobe = case_when(target_right %>% is.na() ~ "left",
                                      target_left %>% is.na() ~ "right",
                                      T ~ NA) %>% as_factor(),
-         congruency_dotprobe = if_else(angry == target_dotprobe, "congruent", "incongruent") %>% as_factor(),
+         congruency_dotprobe = if_else(angry == target_dotprobe, "angry", "neutral") %>% as_factor(),
          targetKind_dotprobe = case_when(target_right %>% is.na() ~ target_left,
                                          target_left %>% is.na() ~ target_right,
                                          T ~ NA) %>% as_factor(),
@@ -83,14 +83,15 @@ behavior = behavior %>%
                                    response == target_left ~ "left",
                                    response == target_right ~ "right",
                                    T ~ "incorrect") %>% as_factor(), #wrong response (target not present)
-         congruency_dual = if_else(response_dual %>% as.character() == angry, "congruent", "incongruent") %>% as_factor() #note: in dual probe, this is the "response-congruency" (not a design parameter of the trial)
+         congruency_dual = if_else(response_dual %>% as.character() == angry, "angry", "neutral") %>% as_factor() #note: in dual probe, this is the "response-congruency" (not a design parameter of the trial)
   ) %>%
+  mutate(congruency = if_else(paradigm == "Dot Probe", congruency_dotprobe, congruency_dual)) %>% select(-congruency_dotprobe, -congruency_dual) %>% 
   
   #times
   mutate(rt = (time_response - time_target)/10, #response time in ms
          expositionCheck = (time_target - time_distractors)/10, #exposition time in ms (can be NA if premature response before target onset was given)
          SOA = if_else(expositionCheck < 500, 100, 500) %>% as_factor()) %>% #SOA = factorized exposition time
-  select(subject, paradigm, block, trial, SOA, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
+  select(subject, paradigm, block, trial, SOA, congruency, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
 
 
 # Quality Checks ----------------------------------------------------------
@@ -120,11 +121,11 @@ behavior %>% summarize(.by = c(subject, paradigm),
 #design
 behavior %>% summarize(.by = paradigm,
                        SOA = mean(SOA == "100", na.rm=T),
+                       congruency = mean(congruency == "angry", na.rm=T),
                        angry = mean(angry == "left", na.rm=T),
                        #only for dot probe:
                        target_dp = mean(target_dotprobe == "left", na.rm=T),
-                       targetKind_dp = mean(targetKind_dotprobe == ":", na.rm=T),
-                       congruency_dp = mean(congruency_dotprobe == "congruent", na.rm=T))
+                       targetKind_dp = mean(targetKind_dotprobe == ":", na.rm=T))
 
 #stimulus presentation
 behavior %>% count(expositionCheck) #rarely, 1 frame was skipped (+ minimally unstable frame rate)
