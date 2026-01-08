@@ -33,6 +33,10 @@ correlation_out = function(coroutput) {
   cat(paste0("r(", names[1], ", ", names[2], "): ", coroutput %>% apa::cor_apa(print=F)), "\n")
 }
 
+spearmanBrown = function(r, n=2) {
+  n * r / (1 + (n-1) * r)
+}
+
 F_apa = function(x) {
   cat("F(", paste(x$parameter, collapse=", "), ") = ", 
       round(x$statistic, 2), 
