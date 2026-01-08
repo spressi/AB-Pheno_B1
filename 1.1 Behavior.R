@@ -215,3 +215,24 @@ behavior.valid %>% filter(paradigm == "Dual Probe") %>%
   ez::ezANOVA(dv = response_angry, wid = subject,
               within = .(SOA),
               type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+
+# Reliability -------------------------------------------------------------
+behavior.reliability = behavior.valid %>% 
+  select(subject, paradigm, trial, SOA, congruency, rt) %>% 
+  mutate(.by = c(subject, paradigm, SOA, congruency), #everything but trial and rt
+         trial_within = 1:n()) %>% 
+  mutate(split = if_else(trial_within %% 2 == 0, "even", "odd")) %>% 
+  summarize(.by = c(subject, paradigm, SOA, congruency, split),
+            rt = mean(rt))
+
+#RT-differences
+behavior.reliability %>% pivot_wider(names_from = c(congruency, split), values_from = rt) %>% 
+  summarize(.by = c(paradigm, SOA),
+            reliability = cor.test(neutral_odd - angry_odd, neutral_even - angry_even) %>% apa::cor_apa(r_ci=T, print=F))
+
+
+#RTs
+behavior.reliability %>% pivot_wider(names_from = split, values_from = rt) %>% 
+  summarize(.by = c(paradigm, SOA, congruency),
+            reliability = cor.test(odd, even) %>% apa::cor_apa(r_ci=T, print=F))
