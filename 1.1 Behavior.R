@@ -141,7 +141,77 @@ behavior %>% summarize(response_dual_left = mean(response_dual == "left", na.rm=
                        response_dual_wrong = mean(response_dual == "incorrect", na.rm=T)) #%>% rowSums()
 
 
-# Analysis ----------------------------------------------------------------
 behavior.valid = behavior %>% filter(response %>% is.na() == F,
                                      expositionCheck %>% is.na() == F,
                                      response_dotprobe != F | response_dual != "incorrect") #kick out incorrect responses
+
+# Analysis: RT ------------------------------------------------------------
+behavior.aov = behavior.valid %>% summarize(.by = c(subject, paradigm, SOA, congruency),
+                                            rt = mean(rt))
+
+# Dot Probe
+behavior.aov.dot = behavior.aov %>% filter(paradigm == "Dot Probe")
+
+behavior.aov.dot %>% 
+  ez::ezANOVA(dv = rt, wid = subject,
+              within = .(SOA, congruency),
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+behavior.aov.dot %>% summarize(.by = c(SOA, congruency),
+                               rt.se = se(rt), rt = mean(rt)) %>% 
+  ggplot(aes(x = SOA, y = rt, color = congruency)) +
+  geom_errorbar(aes(ymin=rt-rt.se*1.96, ymax=rt+rt.se*1.96), size=2, position = dodge) +
+  geom_point(size=6, position = dodge) +
+  labs(y = "RT (ms)") +
+  myGgTheme
+
+with(behavior.aov.dot %>% filter(SOA=="100") %>% pivot_wider(names_from = congruency, values_from = rt), 
+     t.test(neutral, angry, paired=T)) %>% apa::t_apa(es_ci=T)
+with(behavior.aov.dot %>% filter(SOA=="500") %>% pivot_wider(names_from = congruency, values_from = rt), 
+     t.test(neutral, angry, paired=T)) %>% apa::t_apa(es_ci=T)
+
+behavior.aov.dot %>% summarize(.by = c(SOA, congruency),
+                               rt.se = se(rt), rt = mean(rt))
+
+# Dual Probe
+behavior.aov.dual = behavior.aov %>% filter(paradigm == "Dual Probe")
+
+behavior.aov.dual %>% 
+  ez::ezANOVA(dv = rt, wid = subject,
+              within = .(SOA, congruency),
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+behavior.aov.dual %>% summarize(.by = c(SOA, congruency),
+                               rt.se = se(rt), rt = mean(rt)) %>% 
+  ggplot(aes(x = SOA, y = rt, color = congruency)) +
+  geom_errorbar(aes(ymin=rt-rt.se*1.96, ymax=rt+rt.se*1.96), size=2, position = dodge) +
+  geom_point(size=6, position = dodge) +
+  labs(y = "RT (ms)") +
+  myGgTheme
+
+behavior.aov.dual %>% summarize(.by = c(SOA),
+                               rt.se = se(rt), rt = mean(rt))
+
+# both
+# behavior.aov %>% 
+#   ez::ezANOVA(dv = rt, wid = subject,
+#               within = .(SOA, congruency),
+#               between = paradigm,
+#               type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+# 
+# behavior.aov %>% summarize(.by = c(paradigm, SOA, congruency),
+#                                 rt.se = se(rt), rt = mean(rt)) %>% 
+# ggplot(aes(x = SOA, y = rt, color = congruency)) + facet_wrap(~paradigm) +
+#   geom_errorbar(aes(ymin=rt-rt.se*1.96, ymax=rt+rt.se*1.96), size=2, position = dodge) +
+#   geom_point(size=6, position = dodge) +
+#   labs(y = "RT (ms)") +
+#   myGgTheme
+
+
+# Analysis: Dual Responses ------------------------------------------------
+behavior.valid %>% filter(paradigm == "Dual Probe") %>% 
+  summarize(.by = c(subject, SOA),
+            response_angry = mean(congruency == "angry")-.5) %>% 
+  ez::ezANOVA(dv = response_angry, wid = subject,
+              within = .(SOA),
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
