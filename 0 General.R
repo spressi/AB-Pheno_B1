@@ -14,6 +14,8 @@ path.eye = "Summary/" %>% paste0(path.eye.raw, .)
 path.eeg.raw = "EEG/" %>% paste0(path, .)
 path.eeg = "" #TODO preprocessed files
 
+path.rds = ""
+
 
 # Functions ---------------------------------------------------------------
 pathToCode = function(path, path.sep="/", file.ext="\\.") {

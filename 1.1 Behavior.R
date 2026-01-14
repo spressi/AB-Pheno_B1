@@ -144,8 +144,12 @@ behavior %>% summarize(response_dual_left = mean(response_dual == "left", na.rm=
 behavior.valid = behavior %>% filter(response %>% is.na() == F,
                                      expositionCheck %>% is.na() == F,
                                      response_dotprobe != F | response_dual != "incorrect") #kick out incorrect responses
+#behavior.valid %>% write_rds("behavior.valid.rds" %>% paste0(path.rds, .))
 
 # Analysis: RT ------------------------------------------------------------
+
+#behavior.valid = read_rds("behavior.valid.rds" %>% paste0(path.rds, .))
+
 behavior.aov = behavior.valid %>% summarize(.by = c(subject, paradigm, SOA, congruency),
                                             rt = mean(rt))
 
