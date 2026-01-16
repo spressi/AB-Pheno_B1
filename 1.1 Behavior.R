@@ -7,7 +7,7 @@ files.behav = list.files(path.behav, pattern = ".log", full.names = T) %>%
 
 behavior.overview = tibble(name = files.behav %>% pathToCode()) %>% separate(name, sep="_|-", into=c("subject", "block", "experiment", "noET"))
 behavior.overview %>% count(subject) %>% filter(n != 2) #a07 no 2nd block
-behavior.overview %>% filter(noET %>% is.na() == F) #a23: no eye-tracking 2nd block; b18, b22: no eye-tracking
+behavior.overview %>% filter(noET %>% is.na() == F) #a23, a27: no eye-tracking 2nd block; b18, b22: no eye-tracking
 
 behavior = files.behav %>% lapply(\(x) x %>% read_delim(delim="\t", skip=3, show_col_types=F, name_repair="minimal")) %>% bind_rows() %>% 
   rename(event = `Event Type`) %>% rename_with(tolower) %>% select(subject, event, code, time) %>% 
