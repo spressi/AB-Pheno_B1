@@ -3,6 +3,8 @@ library(tidyverse)
 exclusions = c()
 
 trials.N = 576
+hz.eeg = 500
+hz.et = 250
 
 # Paths -------------------------------------------------------------------
 path <- "C:/Data/AB_B1/Data/" #@work
