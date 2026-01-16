@@ -68,7 +68,8 @@ eeg.markers = eeg.markers2; rm(eeg.markers2)
 
 eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 #a07: only first block
-#a13: last 2 trials missing in EEG (note: if first were missing, trial numbers would need adjustment)
+#a13: last 2 markers (i.e., last trial) missing in EEG (verified, see code below)
+#a30: last 2 markers (i.e., last trial) missing in EEG (verified, see code below)
 
 # #check what happened to a13
 # list.files(path.seq, pattern = "a13", full.names = T) %>% Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training
@@ -78,8 +79,16 @@ eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 #   filter(condition != eeg.markers %>% filter(subject == "a13", value %in% c(99, 96) == F) %>% pull(value) %>% c(NA))
 # #=> no mismatch across trials
 
+# #check what happened to a30
+# list.files(path.seq, pattern = "a30", full.names = T) %>% Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training
+#   lapply(read_tsv) %>% bind_rows() %>%
+#   mutate(trial = 1:n(), condition = condition + if_else(soa == 100, 5, 0)) %>%
+#   select(trial, condition) %>%
+#   filter(condition != eeg.markers %>% filter(subject == "a30", value %in% c(99, 96) == F) %>% pull(value) %>% c(NA))
+# #=> no mismatch across trials
 
-# Insert Break Markers ----------------------------------------------------
+
+# Breaks ------------------------------------------------------------------
 breakTime = 2000 #in samples
 eeg.markers.breaks = eeg.markers %>% 
   mutate(.by = subject, timediff = lead(sample)-sample) %>% 

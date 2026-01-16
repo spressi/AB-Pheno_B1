@@ -20,8 +20,8 @@ eeg.markers = eeg.markers.list %>% bind_rows(.id = "subject") %>% tibble() %>%
 
 eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 #a07: only first block
-#a13: last 2 trials missing in EEG (verified, see code below)
-#a30: last 2 trials missing in EEG (verified, see code below) 
+#a13: last 2 markers (i.e., last trial) missing in EEG (verified, see code below)
+#a30: last 2 markers (i.e., last trial) missing in EEG (verified, see code below)
 
 # #check what happened to a13
 # list.files(path.seq, pattern = "a13", full.names = T) %>% Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training
