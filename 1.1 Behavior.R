@@ -25,7 +25,7 @@ behavior = behavior %>%
 #behavior %>% filter(event == lag(event), event == "Response") #check multiple responses
 #behavior %>% count(subject, trial) %>% filter(n < 3) %>% left_join(behavior) #check missing responses
 
-behavior %>% summarize(.by = subject, trial = max(trial)) %>% filter(trial!=576) #a07 no 2nd block (cf. behavior.overview)
+behavior %>% summarize(.by = subject, trial = max(trial)) %>% filter(trial!=trials.N) #a07 no 2nd block (cf. behavior.overview)
 
 
 # Remap Responses ---------------------------------------------------------

@@ -1,5 +1,8 @@
 library(tidyverse)
 
+exclusions = c()
+
+trials.N = 576
 
 # Paths -------------------------------------------------------------------
 path <- "C:/Data/AB_B1/Data/" #@work
