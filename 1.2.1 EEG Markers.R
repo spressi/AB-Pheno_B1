@@ -78,6 +78,21 @@ eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 #   filter(condition != eeg.markers %>% filter(subject == "a13", value %in% c(99, 96) == F) %>% pull(value) %>% c(NA))
 # #=> no mismatch across trials
 
+
+# Insert Break Markers ----------------------------------------------------
+breakTime = 2000 #in samples
+eeg.markers.breaks = eeg.markers %>% 
+  mutate(.by = subject, timediff = lead(sample)-sample) %>% 
+  summarize(.by = subject, 
+            breaks = sum(timediff > breakTime, na.rm=T),
+            breakIndex = if_else(breaks == 1, which.max(timediff), NA),
+            n = n()
+            )
+eeg.markers.breaks %>% filter(breaks != 1 | breakIndex != trials.N | n != trials.N*2) #2 markers per trial (distractors & response) => break should be at trials.N * 2 / 2 = trials.N
+#break always after 576th marker
+
+
+# Write Files -------------------------------------------------------------
 if (writeCorrectedMarkers) {
   markerFilesToWrite = c(invertedMarkers, eeg.markers %>% pull(subject) %>% unique() %>% Filter(\(x) x %>% str_starts("b"), .)) %>% unique() %>% sort()
   for (s in markerFilesToWrite) {
