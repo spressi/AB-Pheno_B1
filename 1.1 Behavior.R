@@ -12,6 +12,7 @@ behavior.overview %>% filter(noET %>% is.na() == F) #a23, a27: no eye-tracking 2
 behavior = files.behav %>% lapply(\(x) x %>% read_delim(delim="\t", skip=3, show_col_types=F, name_repair="minimal")) %>% bind_rows() %>% 
   rename(event = `Event Type`) %>% rename_with(tolower) %>% select(subject, event, code, time) %>% 
   separate(subject, c("subject", "block")) %>% 
+  mutate(block = block %>% as.numeric()) %>% 
   filter(event == "Response" & code != "1" | #get rid of 1 and 2 responses (space bar & experimenter key)
            code == "targets" |
            code %>% grepl("distractors", .)) %>% 
@@ -91,7 +92,7 @@ behavior = behavior %>%
   #times
   mutate(rt = (time_response - time_target)/10, #response time in ms
          expositionCheck = (time_target - time_distractors)/10, #exposition time in ms (can be NA if premature response before target onset was given)
-         SOA = if_else(expositionCheck < 500, 100, 500) %>% as_factor()) %>% #SOA = factorized exposition time
+         SOA = if_else(expositionCheck < 500, 100, 500)) %>% #SOA = exposition time to distractor
   select(subject, paradigm, block, trial, SOA, congruency, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
 
 
@@ -121,7 +122,7 @@ behavior %>% summarize(.by = c(subject, paradigm),
 
 #design
 behavior %>% summarize(.by = paradigm,
-                       SOA = mean(SOA == "100", na.rm=T),
+                       SOA = mean(SOA == 100, na.rm=T),
                        congruency = mean(congruency == "angry", na.rm=T),
                        angry = mean(angry == "left", na.rm=T),
                        #only for dot probe:
@@ -152,7 +153,8 @@ behavior.valid = behavior %>% filter(response %>% is.na() == F,
 #behavior.valid = read_rds("behavior.valid.rds" %>% paste0(path.rds, .))
 
 behavior.aov = behavior.valid %>% summarize(.by = c(subject, paradigm, SOA, congruency),
-                                            rt = mean(rt))
+                                            rt = mean(rt)) %>% 
+  mutate(SOA = SOA %>% as_factor())
 
 # Dot Probe
 behavior.aov.dot = behavior.aov %>% filter(paradigm == "Dot Probe")
