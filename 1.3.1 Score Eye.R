@@ -77,7 +77,7 @@ for (vp in vpn) {
   #msgtxt <- daten[imsg+5] #for calib
   msgtxt <- paste(daten[imsg+4], daten[imsg+5], daten[imsg+6], daten[imsg+7], daten[imsg+8]) #for main experiment... note to future self: don't use whitespaces in messages :)
   #if (length(msgtxt) != 16) { #for calib
-  if (length(msgtxt) != 288) { #for main experiment
+  if (length(msgtxt) != trials.N/2) { #for main experiment
     print(paste0(code, ": ERROR Trial labels"))
   }
   
@@ -91,10 +91,10 @@ for (vp in vpn) {
   # Find Messages
   imsg <- which(daten$Type=="MSG")
   
-  # Process trialwise data (Timestamps are in nanoseconds, video duration=5s)
+  # Process trialwise data (Timestamps are in nanoseconds)
   for (trial in 1:length(imsg)) {
-    st <- daten$Time[imsg[trial]]-1000*1000      # Trial = onset  - 1000ms
-    en <- daten$Time[imsg[trial]]+6000*1000      #         offset + 6000ms
+    st <- daten$Time[imsg[trial]]-prestim*1000
+    en <- daten$Time[imsg[trial]]+max(poststim)*1000
     
     tdaten <- daten[(daten$Time>=st) & (daten$Time<=en),]
     
