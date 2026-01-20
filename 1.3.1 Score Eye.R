@@ -63,6 +63,10 @@ vpn <- list.files(path.eye.raw, pattern=".txt", full.names = T)
 for (vp in vpn) {
   #vp = head(vpn, 1)
   #vp = sample(vpn, 1)
+  
+  #vp = vpn %>% Filter(\(x) {x %>% grepl("a19_2", .)}, .)
+  #vp = vpn %>% Filter(\(x) {x %>% grepl("b04_2", .)}, .)
+  
   code <- vp %>% pathToCode(file.ext = " ")
   print(code)
   
@@ -185,6 +189,21 @@ for (vp in vpn) {
                                 #code=paste(vp,"s",session,sep=""),
                                 trial=paste("Trial:",trial),
                                 msgtime=onset,
+                                msgtxt=msgtxt[trial])
+      }
+    } else {
+      # Store messages without valid fixations
+      if (exists("allmsgtab")) {
+        allmsgtab <- rbind(allmsgtab,data.frame(code=code,
+                                                #code=paste(vp,"s",session,sep=""),
+                                                trial=paste("Trial:",trial),
+                                                msgtime=NA,
+                                                msgtxt=msgtxt[trial]))
+      } else {
+        allmsgtab <- data.frame(code=code,
+                                #code=paste(vp,"s",session,sep=""),
+                                trial=paste("Trial:",trial),
+                                msgtime=NA,
                                 msgtxt=msgtxt[trial])
       }
     }
