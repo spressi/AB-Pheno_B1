@@ -64,8 +64,9 @@ for (vp in vpn) {
   #vp = head(vpn, 1)
   #vp = sample(vpn, 1)
   
-  #vp = vpn %>% Filter(\(x) {x %>% grepl("a19_2", .)}, .)
-  #vp = vpn %>% Filter(\(x) {x %>% grepl("b04_2", .)}, .)
+  #vp = vpn %>% Filter(\(x) {x %>% grepl("a05_2", .)}, .)
+  #vp = vpn %>% Filter(\(x) {x %>% grepl("a19_2", .)}, .) #problem resolved
+  #vp = vpn %>% Filter(\(x) {x %>% grepl("b04_2", .)}, .) #problem resolved
   
   code <- vp %>% pathToCode(file.ext = " ")
   print(code)
