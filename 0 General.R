@@ -9,6 +9,8 @@ hz.et = 250
 prestim = 1000
 poststim = c(100, 500) #SOA
 
+expoID = "*" #all messages are beginning of trial
+
 # Paths -------------------------------------------------------------------
 path <- "C:/Data/AB_B1/Data/" #@work
 #path = path %>% gsub("C:/Data", "D:/Arbeit", .) #@home
