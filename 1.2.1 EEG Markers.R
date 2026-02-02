@@ -55,7 +55,7 @@ eeg.markers2 = eeg.markers %>%
          value = case_when(paradigm == "Dual Probe" & SOA %>% is.na() == F & value < 100 ~ 1, #angry left  := 1 (i.e., drop information on targets)
                            paradigm == "Dual Probe" & SOA %>% is.na() == F & value > 100 ~ 2, #angry right := 2 (i.e., drop information on targets)
                            T ~ value), #leave responses and Dot Probe values untouched
-         value = case_when(paradigm == "Dual Probe" & SOA==100 ~ value+5, #now add +10 for SOA==100
+         value = case_when(paradigm == "Dual Probe" & SOA==100 ~ value+5, #now add +5 for SOA==100
                            T ~ value)) %>% 
   #fill(trial, .direction = "down") %>% 
   
