@@ -42,6 +42,14 @@ eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 # assert correct markers
 eeg.markers %>% filter(paradigm=="Dot Probe" & value %in% c(11, 12, 16, 17, 21, 22, 26, 27, 111, 112, 116, 117, 121, 122, 126, 127, 96, 99) == F | 
                          paradigm=="Dual Probe" & value %in% c(1, 2, 6, 7, 88, 99) == F)
+eeg.markers %>% filter(paradigm=="Dot Probe") %>% count(value) %>% arrange(value)
+eeg.markers %>% filter(paradigm=="Dual Probe") %>% count(value) %>% arrange(value)
+
+# sequences %>% filter(subject %>% str_starts("b")) %>% 
+#   filter(subject %in% {eeg.markers %>% pull(subject) %>% unique()}) %>% 
+#   #pull(subject) %>% unique()
+#   mutate(angry = if_else(distractor_left %>% grepl("AN", .), "left", "right")) %>% 
+#   count(angry)
   
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
