@@ -38,6 +38,10 @@ eeg.markers %>% count(subject) %>% filter(n != 1152) %>% arrange(n)
 #   select(trial, condition) %>%
 #   filter(condition != eeg.markers %>% filter(subject == "a30", value %in% c(99, 96) == F) %>% pull(value) %>% c(NA))
 # #=> no mismatch across trials
+
+# assert correct markers
+eeg.markers %>% filter(paradigm=="Dot Probe" & value %in% c(11, 12, 16, 17, 21, 22, 26, 27, 111, 112, 116, 117, 121, 122, 126, 127, 96, 99) == F | 
+                         paradigm=="Dual Probe" & value %in% c(1, 2, 6, 7, 88, 99) == F)
   
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
