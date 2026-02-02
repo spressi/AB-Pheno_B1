@@ -4,6 +4,10 @@ library(tidyverse)
 files.behav = list.files(path.behav, pattern = ".log", full.names = T) %>% 
   Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training logs
   Filter(\(x) x %>% grepl("Pre.log", .) == F, .) #get rid of restarts
+files.seq = list.files(path.seq, pattern = ".txt", full.names = T) %>% 
+  Filter(\(x) x %>% grepl("_0", .) == F, .) %>% #get rid of training sequences
+  Filter(\(x) x %>% grepl("test", .) == F, .) %>% #get rid of test sequences
+  Filter(\(x) x %>% grepl("calib", .) == F, .) #get rid of calibration sequences
 
 behavior.overview = tibble(name = files.behav %>% pathToCode()) %>% separate(name, sep="_|-", into=c("subject", "block", "experiment", "noET"))
 behavior.overview %>% count(subject) %>% filter(n != 2) #a07 no 2nd block
@@ -95,6 +99,27 @@ behavior = behavior %>%
          expositionCheck = (time_target - time_distractors)/10, #exposition time in ms (can be NA if premature response before target onset was given)
          SOA = if_else(expositionCheck < 500, 100, 500)) %>% #SOA = exposition time to distractor
   select(subject, paradigm, block, trial, SOA, congruency, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
+
+behavior %>% filter(SOA %>% is.na()) %>% select(subject, trial, SOA, rt, contains("time")) #no for premature responses => get SOA from sequences
+
+#sequences = files.seq %>% lapply(\(x) x %>% read_tsv(show_col_types=F) %>% mutate(across(contains("target"), as.character))) %>% bind_rows() #file name missing for subject identification => for loop
+sequences = tibble()
+for (s in files.seq) {
+  #s = files.seq %>% sample(1)
+  sequences = s %>% read_tsv(show_col_types=F) %>% 
+    mutate(subject = s %>% pathToCode(),
+           across(contains("target"), as.character)) %>% 
+    bind_rows(sequences, .)
+}
+sequences = sequences %>% separate(subject, c("subject", "block")) %>% 
+  mutate(.by = subject, trial = 1:n(), block = block %>% as.integer()) %>% 
+  relocate(subject, block, trial) %>% 
+  rename(SOA = soa, distractor_left = distractL, distractor_right = distractR, target_left = targetL, target_right = targetR) %>% 
+  mutate(across(contains("distractor"), pathToCode))
+  
+#replace SOA from expositionCheck with SOA from sequence file
+#behavior %>% left_join(sequences %>% select(subject, block, trial, SOA2 = SOA, iti)) %>% filter(SOA != SOA2)
+behavior = behavior %>% select(-SOA) %>% left_join(sequences %>% select(subject, block, trial, SOA, iti))
 
 behavior %>% filter(SOA %>% is.na()) %>% select(subject, trial, SOA, rt, contains("time"))
 
