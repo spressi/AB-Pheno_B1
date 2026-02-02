@@ -244,6 +244,7 @@ behavior.aov.dual %>% summarize(.by = c(SOA),
 
 # Analysis: Dual Responses ------------------------------------------------
 behavior.valid %>% filter(paradigm == "Dual Probe") %>% 
+  mutate(SOA = SOA %>% as_factor()) %>% 
   summarize(.by = c(subject, SOA),
             response_angry = mean(congruency == "angry")-.5) %>% 
   ez::ezANOVA(dv = response_angry, wid = subject,
