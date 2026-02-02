@@ -29,6 +29,7 @@ behavior = behavior %>%
 behavior %>% summarize(.by = subject, trial = max(trial)) %>% filter(trial!=trials.N) 
 #a07 no 2nd block (cf. behavior.overview)
 
+#behavior %>% filter(subject=="a12" & trial==529 | subject=="b05" & trial==228 | subject=="b29" & trial==460) #response before target => no target presentation => SOA calculation fails
 
 # Remap Responses ---------------------------------------------------------
 #behavior %>% filter(event == "Response") %>% summarize(.by = paradigm, summary = code %>% as.integer() %>% summary() %>% bind_rows())
@@ -95,6 +96,7 @@ behavior = behavior %>%
          SOA = if_else(expositionCheck < 500, 100, 500)) %>% #SOA = exposition time to distractor
   select(subject, paradigm, block, trial, SOA, congruency, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
 
+behavior %>% filter(SOA %>% is.na()) %>% select(subject, trial, SOA, rt, contains("time"))
 
 # Quality Checks ----------------------------------------------------------
 
