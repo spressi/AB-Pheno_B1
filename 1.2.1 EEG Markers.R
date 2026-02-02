@@ -4,7 +4,7 @@ library(tidyverse)
 
 writeCorrectedMarkers = T #rewrite marker file for subjects with inverted markers (low voltage = signal instead of high)
 
-files.eeg.markers = list.files(path.eeg.raw, pattern = ".mrk", full.names = T) %>% 
+files.eeg.markers = list.files(path.eeg.raw, pattern = ".vmrk", full.names = T) %>% 
   Filter(\(x) x %>% grepl("_2", .) == F, .) %>% #get rid of second file
   Filter(\(x) x %>% grepl("_original", .) == F, .) #get rid of original marker files (just backup for transparency)
 eeg.markers.list = list()
