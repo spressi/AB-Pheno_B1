@@ -101,6 +101,7 @@ behavior = behavior %>%
   select(subject, paradigm, block, trial, SOA, congruency, angry, response, rt, starts_with("distractor"), starts_with("target"), contains("dotprobe"), contains("dual"), expositionCheck, starts_with("time_"))
 
 behavior %>% filter(SOA %>% is.na()) %>% select(subject, trial, SOA, rt, contains("time")) #no for premature responses => get SOA from sequences
+#behavior %>% filter(rt == max(rt, na.rm=T)) #reaction during ITI (after target offset) is also recorded!
 
 #sequences = files.seq %>% lapply(\(x) x %>% read_tsv(show_col_types=F) %>% mutate(across(contains("target"), as.character))) %>% bind_rows() #file name missing for subject identification => for loop
 sequences = tibble()
@@ -185,6 +186,15 @@ behavior %>% summarize(response_dual_left = mean(response_dual == "left", na.rm=
 behavior.valid = behavior %>% filter(response %>% is.na() == F,
                                      expositionCheck %>% is.na() == F,
                                      response_dotprobe != F | response_dual != "incorrect") #kick out incorrect responses
+
+# # check RTs
+#behavior.valid %>% filter(rt == max(rt, na.rm=T))
+#behavior.valid %>% pull(rt) %>% summary()
+#behavior.valid %>% pull(rt) %>% quantile(seq(.95, 1, .005))
+#behavior.valid %>% filter(rt > targetTime) %>% select(subject, trial, rt, response_dotprobe, contains("time_"), SOA, iti) %>% View("excessive RTs")
+
+#TODO Winsorize RTs to targetTime? (button press during ITI is still recorded and evaluated)
+
 #behavior.valid %>% write_rds("behavior.valid.rds" %>% paste0(path.rds, .))
 
 # Analysis: RT ------------------------------------------------------------
