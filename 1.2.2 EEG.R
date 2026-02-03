@@ -45,11 +45,39 @@ eeg.markers %>% filter(paradigm=="Dot Probe" & value %in% c(11, 12, 16, 17, 21, 
 eeg.markers %>% filter(paradigm=="Dot Probe") %>% count(value) %>% arrange(value)
 eeg.markers %>% filter(paradigm=="Dual Probe") %>% count(value) %>% arrange(value)
 
+# # assert balancing of angry left & right
 # sequences %>% filter(subject %>% str_starts("b")) %>% 
 #   filter(subject %in% {eeg.markers %>% pull(subject) %>% unique()}) %>% 
 #   #pull(subject) %>% unique()
 #   mutate(angry = if_else(distractor_left %>% grepl("AN", .), "left", "right")) %>% 
 #   count(angry)
+
+# assert correct timing
+eeg.markers %>% 
+  mutate(.by = subject, 
+         trial = ceiling(1:n()/2),
+         samplediff = sample-lag(sample)) %>% 
+  filter(samplediff == min(samplediff, na.rm=T)) %>% 
+  left_join(sequences %>% select(subject, trial, SOA, iti)) #premature response within the first 100 ms => shorter than a normal 100 ms trial :(
+
+eeg.markers.long = eeg.markers %>% 
+  mutate(.by = subject, trial = ceiling(1:n()/2)) %>% 
+  mutate(.by = c(subject, trial), helper = 1:n()) %>% 
+  mutate(kind = if_else(helper == 1, "stim", "response")) %>% select(-helper) %>% 
+  pivot_wider(names_from = kind, values_from = c(value, sample), id_cols = c(subject, trial)) %>% 
+  left_join(sequences %>% select(subject, trial, SOA, iti)) %>% 
+  mutate(stimToResp = (sample_response - sample_stim) / hz.eeg) %>% 
+  mutate(.by = subject, 
+         respToNextStim = (lead(sample_stim) - sample_response) / hz.eeg,
+         stimToNextStim = (lead(sample_stim) - sample_stim) / hz.eeg)
+eeg.markers.long %>% select(-contains("sample")) %>% 
+  filter(#.by = subject,
+         stimToResp == min(stimToResp, na.rm=T) | 
+           #respToNextStim == min(respToNextStim, na.rm=T) |
+           stimToNextStim == min(stimToNextStim, na.rm=T) |
+           stimToResp == max(stimToResp, na.rm=T) | 
+           #respToNextStim == max(respToNextStim, na.rm=T) |
+           stimToNextStim == max(stimToNextStim, na.rm=T))
   
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
