@@ -113,9 +113,21 @@ for (s in files.seq) {
 }
 sequences = sequences %>% separate(subject, c("subject", "block")) %>% 
   mutate(.by = subject, trial = 1:n(), block = block %>% as.integer()) %>% 
-  relocate(subject, block, trial) %>% 
   rename(SOA = soa, distractor_left = distractL, distractor_right = distractR, target_left = targetL, target_right = targetR) %>% 
-  mutate(across(contains("distractor"), pathToCode))
+  mutate(paradigm = case_when(subject %>% str_starts("a") ~ "Dot Probe",
+                              subject %>% str_starts("b") ~ "Dual Probe",
+                              T ~ NA) %>% as_factor(),
+         condition = if_else(paradigm == "Dot Probe" & SOA==100, condition+5, condition), #this was done within Presentation (don't ask me why I didn't do this within the sequence files)
+         across(contains("distractor"), pathToCode),
+         angry = case_when(distractor_left %>% grepl("AN", .) & distractor_right %>% grepl("NE", .) ~ "left",
+                           distractor_left %>% grepl("NE", .) & distractor_right %>% grepl("AN", .) ~ "right",
+                           T ~ NA) %>% as.factor()) %>% #alphabetical order desired here! => as.factor
+  relocate(subject, paradigm, block, trial, condition, angry, SOA, contains("target"), iti)
+#sequences %>% filter(paradigm %>% is.na() | angry %>% is.na())
+sequences %>% filter(paradigm == "Dot Probe") %>% select(condition, angry, SOA, contains("target")) %>% unique() %>% 
+  #arrange(condition) #logic doesn't get clear like this
+  arrange(desc(SOA), angry, condition)
+#note: for Dual Probe, sequences needed to be recoded altogether (cf. EEG Markers.R)
   
 #replace SOA from expositionCheck with SOA from sequence file
 #behavior %>% left_join(sequences %>% select(subject, block, trial, SOA2 = SOA, iti)) %>% filter(SOA != SOA2)
