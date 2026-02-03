@@ -231,6 +231,28 @@ write.table(allsactab,paste(path.eye,"Saccades.txt",sep=""),sep="\t",dec=",",quo
 
 
 # Check Eye Calib ---------------------------------------------------------
+read_tsv(paste0(path.eye %>% gsub("/Summary", "/test/Summary", .), "Fixations.txt"), locale = locale(decimal_mark = ",")) %>% 
+  left_join(read_tsv(paste0(path.eye %>% gsub("/Summary", "/test/Summary", .), "Messages.txt"), locale = locale(decimal_mark = ",")), by = c("RECORDING_SESSION_LABEL", "TRIAL_LABEL")) %>% 
+  separate(CURRENT_MSG_TEXT, c("distractL", "targetL", NA, "distractR", "targetR"), sep = " ") %>% 
+  mutate(angry = if_else(distractL %>% grepl("category1", .), "left", "right"),
+         targetSide = if_else(targetL=="NA", "right", "left"),
+         congruency = if_else(angry==targetSide, "congruent", "incongruent"),
+         targetKind = if_else(targetSide=="left", targetL, targetR)) %>% 
+  #select(-(1:7)) %>% unique() #for checking
+  mutate(start = CURRENT_FIX_START - CURRENT_MSG_TIME,
+         start = if_else(start < 0, 0, start),
+         end = CURRENT_FIX_END - CURRENT_MSG_TIME,
+         end = if_else(end < 0, 0, end),
+         dur = end - start) %>% 
+  filter(dur > 0) %>% 
+  ggplot(aes(x = CURRENT_FIX_X, y = CURRENT_FIX_Y, color = RECORDING_SESSION_LABEL, size = dur)) +
+  geom_rect(color="black", fill=NA, xmin = 0, xmax = screen.width.px, ymin = 0, ymax = screen.height.px, inherit.aes = F) +
+  geom_path(aes(group = interaction(RECORDING_SESSION_LABEL, TRIAL_LABEL)), size=1, alpha = .125) +
+  geom_point(alpha = .25) + 
+  scale_color_viridis_d() + myGgTheme
+
+
+# Check Fixations ---------------------------------------------------------
 read_tsv(paste0(path.eye, "Fixations.txt"), locale = locale(decimal_mark = ",")) %>% 
   left_join(read_tsv(paste0(path.eye, "Messages.txt"), locale = locale(decimal_mark = ",")), by = c("RECORDING_SESSION_LABEL", "TRIAL_LABEL")) %>% 
   separate(CURRENT_MSG_TEXT, c("distractL", "targetL", NA, "distractR", "targetR"), sep = " ") %>% 
@@ -249,5 +271,5 @@ read_tsv(paste0(path.eye, "Fixations.txt"), locale = locale(decimal_mark = ","))
   facet_grid(rows = vars(angry), cols = vars(targetSide), labeller = "label_both") +
   geom_rect(color="black", fill=NA, xmin = 0, xmax = screen.width.px, ymin = 0, ymax = screen.height.px, inherit.aes = F) +
   #geom_path(aes(group = interaction(RECORDING_SESSION_LABEL, TRIAL_LABEL)), size=1, alpha = .125) +
-  geom_point(alpha = .125) + 
-  scale_color_viridis_d() + theme_minimal()
+  geom_point(alpha = 1/2^6) + guides(color = "none") +
+  scale_color_viridis_d() + myGgTheme
