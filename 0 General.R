@@ -8,6 +8,7 @@ hz.et = 250
 
 prestim = 1000
 poststim = c(100, 500) #SOA
+targetTime = 1500
 
 expoID = "*" #all messages are beginning of trial
 
