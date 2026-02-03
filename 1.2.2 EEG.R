@@ -65,11 +65,13 @@ eeg.markers.long = eeg.markers %>%
   mutate(.by = c(subject, trial), helper = 1:n()) %>% 
   mutate(kind = if_else(helper == 1, "stim", "response")) %>% select(-helper) %>% 
   pivot_wider(names_from = kind, values_from = c(value, sample), id_cols = c(subject, trial)) %>% 
-  left_join(sequences %>% select(subject, trial, SOA, iti)) %>% 
-  mutate(stimToResp = (sample_response - sample_stim) / hz.eeg) %>% 
-  mutate(.by = subject, 
-         respToNextStim = (lead(sample_stim) - sample_response) / hz.eeg,
-         stimToNextStim = (lead(sample_stim) - sample_stim) / hz.eeg)
+  left_join(behavior %>% select(subject, block, trial)) %>% relocate(subject, block, trial) %>% #insert block
+  left_join(sequences %>% select(subject, trial, SOA, iti)) %>% #insert SOA & iti
+  mutate(stimToResp = (sample_response - sample_stim) / hz.eeg * 1000,
+         rt = stimToResp - SOA) %>% 
+  mutate(.by = c(subject, block), 
+         respToNextStim = (lead(sample_stim) - sample_response) / hz.eeg * 1000,
+         stimToNextStim = (lead(sample_stim) - sample_stim) / hz.eeg * 1000)
 eeg.markers.long %>% select(-contains("sample")) %>% 
   filter(#.by = subject,
          stimToResp == min(stimToResp, na.rm=T) | 
@@ -77,7 +79,7 @@ eeg.markers.long %>% select(-contains("sample")) %>%
            stimToNextStim == min(stimToNextStim, na.rm=T) |
            stimToResp == max(stimToResp, na.rm=T) | 
            #respToNextStim == max(respToNextStim, na.rm=T) |
-           stimToNextStim == max(stimToNextStim, na.rm=T))
+           stimToNextStim == max(stimToNextStim, na.rm=T)) %>% arrange(rt)
   
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
