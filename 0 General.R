@@ -13,11 +13,11 @@ targetTime = 1500
 expoID = "*" #all messages are beginning of trial
 
 # Paths -------------------------------------------------------------------
-path <- "C:/Data/AB_B1/Data/" #@work
+path = "C:/Data/AB_B1/Data/" #@work
 #path = path %>% gsub("C:/Data", "D:/Arbeit", .) #@home
 
 path.behav = "log/" %>% paste0(path, .)
-path.seq = paste0(path, "../sequences/")
+path.seq = "../sequences/" %>% paste0(path, .)
 
 path.eye.raw = "Eye/" %>% paste0(path, .)
 path.eye = "Summary/" %>% paste0(path.eye.raw, .)
@@ -25,7 +25,7 @@ path.eye = "Summary/" %>% paste0(path.eye.raw, .)
 path.eeg.raw = "EEG/" %>% paste0(path, .)
 path.eeg = "" #TODO preprocessed files
 
-path.rds = ""
+path.rds = "" #project root directory
 
 
 # Functions ---------------------------------------------------------------
