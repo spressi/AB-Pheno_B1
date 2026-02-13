@@ -16,6 +16,7 @@ expoID = "*" #all messages are beginning of trial
 path = "C:/Data/AB_B1/Data/" #@work
 #path = path %>% gsub("C:/Data", "D:/Arbeit", .) #@home
 
+path.que = "questionnaires/data_ab-pheno_b1.csv" %>% paste0(path, .)
 path.behav = "log/" %>% paste0(path, .)
 path.seq = "../sequences/" %>% paste0(path, .)
 
@@ -29,6 +30,17 @@ path.rds = "" #project root directory
 
 
 # Functions ---------------------------------------------------------------
+checkContent = function(df, col, print=T) {
+  result = df %>% count(!!rlang::ensym(col), .drop=F) %>% arrange(desc(n))
+  if (print) {
+    result %>% print(n = nrow(.))
+    return(invisible(result))
+  }
+  return(result)
+}
+
+descriptives.list = list(m = mean, sd = sd, min = min, max = max)
+
 pathToCode = function(path, path.sep="/", file.ext="\\.") {
   first = path %>% gregexpr(path.sep, .) %>% lapply(max) %>% unlist() %>% {. + 1} %>% 
     pmax(1, .) #if first not found, set it to start of string
