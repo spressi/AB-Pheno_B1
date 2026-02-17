@@ -227,7 +227,7 @@ library("DescTools")
     vpn = vpn[!(vpn %in% exclusions)] #minus a priori exclusions
     vpn.n = length(vpn)
     
-    trials.n = mess %>% group_by(subject) %>% summarise(trials = max(trial) - min(trial) + 1) %>% .$trials %>% max()
+    trials.n = mess %>% group_by(subject) %>% summarize(trials = max(trial) - min(trial) + 1) %>% .$trials %>% max()
     
     baselines.trial = vector("list", length(vpn.n)) #list of evaluations of baselines per trial for every subject
     baselines.summary = data.frame(subject=character(vpn.n), ntrials=numeric(vpn.n), nValid=numeric(vpn.n), 
@@ -656,9 +656,9 @@ baselines.summary %>% ggplot(aes(x = invalid, fill = block)) +
   geom_vline(xintercept = outlierLimit.eye, color = "red", linetype = "dashed", linewidth = 2) +
   scale_fill_viridis_d() + myGgTheme
 
-baselines.summary %>% group_by(block) %>% summarise(totalN = n(), includedN = sum(included), includedP = mean(included))
+baselines.summary %>% summarize(.by = block, totalN = n(), includedN = sum(included), includedP = mean(included))
 
-baselines.summary %>% group_by(subject) %>% summarise(invalid = mean(invalid)) %>% arrange(desc(invalid))
-baselines.summary %>% group_by(subject) %>% summarise(invalid = mean(invalid)) %>% 
-  filter(invalid < outlierLimit.eye) %>% summarise(invalid.m = mean(invalid), invalid.sd = sd(invalid))
+baselines.summary %>% summarize(.by = subject, invalid = mean(invalid)) %>% arrange(desc(invalid))
+baselines.summary %>% group_by(subject) %>% summarize(invalid = mean(invalid)) %>% 
+  filter(invalid < outlierLimit.eye) %>% summarize(invalid.m = mean(invalid), invalid.sd = sd(invalid))
 
