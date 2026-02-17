@@ -31,6 +31,8 @@ library("DescTools")
   pixsize <- 520 / screen.width  # Pixel size in mm (for scan path length)
   distance = 650 #screen center to subject eyes in mm
   
+  indifference.zone = 100 #pixels away from center to count as looking to face
+  
   z.max = 2 #Winsorize dependent variables to a z value of 2
   q.max = pnorm(z.max * c(-1, 1)) #needed for DescTools::Winsorize function
   q.max = c(0, 1) #switch off Winsorizing (comment out to switch on)
@@ -609,6 +611,10 @@ fixations.distractors = fixations %>%
          dur = end - start) %>% 
   filter(dur > 0) #note: this may drop some trials completely
 
+#TODO remove trials with invalid responses?
+#fixations.valid %>% filter(response %>% is.na()) %>% select(subject, trial) %>% unique()
+#fixations.valid %>% filter(angry %>% is.na() | congruency %>% is.na()) %>% select(subject, trial, congruency, angry, response_dual) %>% unique() %>% print(n = nrow(.))
+
 
 # Valid Fixations ---------------------------------------------------------
 vpn.eye = fixations.distractors %>% pull(subject) %>% unique() %>% setdiff(exclusions.eye) %>% sort()
@@ -662,3 +668,70 @@ baselines.summary %>% summarize(.by = subject, invalid = mean(invalid)) %>% arra
 baselines.summary %>% group_by(subject) %>% summarize(invalid = mean(invalid)) %>% 
   filter(invalid < outlierLimit.eye) %>% summarize(invalid.m = mean(invalid), invalid.sd = sd(invalid))
 
+
+# ROI analysis ------------------------------------------------------------
+fixations.valid = fixations.valid %>% 
+  mutate(ROI.side = case_when(x <= screen.width/2 - indifference.zone ~ "left",
+                              x >= screen.width/2 + indifference.zone ~ "right",
+                              T ~ NA),
+         ROI = if_else(ROI.side == angry, "angry", "neutral"))
+  
+# fixations.valid %>% ggplot(aes(x = x, y = y, group = interaction(subject, trial), color = ROI.side)) +
+#   geom_rect(xmax=screen.width/2-indifference.zone, xmin=-Inf, ymin=-Inf, ymax=+Inf, fill="blue", alpha=.2) +
+#   geom_rect(xmin=screen.width/2+indifference.zone, xmax=+Inf, ymin=-Inf, ymax=+Inf, fill="red", alpha=.2) +
+#   geom_point(alpha=.1) + #geom_line(alpha=.1) +
+#   myGgTheme
+fixations.valid %>% ggplot(aes(x = x, fill = ROI.side)) +
+  geom_histogram(boundary = screen.width/2, binwidth = indifference.zone/2, color = "black") +
+  #geom_vline(xintercept = c(-indifference.zone, +indifference.zone) + screen.width/2, linetype = "dashed", color = "red") +
+  myGgTheme
+
+fixations.first = fixations.valid %>% 
+  filter(start > 0, 
+         #end < SOA, #100 ms SOA is too short for a saccade => also count saccades after face offset (despite strong confound with target)
+  ) %>% 
+  summarize(.by = c(subject, trial, paradigm, SOA, angry),
+            firstDwell = ROI %>% na.omit() %>% first()) %>% 
+  summarize(.by = -c(trial, firstDwell),
+            firstDwell.angry = mean(firstDwell=="angry", na.rm=T)) %>% 
+  arrange(subject, paradigm, SOA, angry) %>% mutate(SOA = SOA %>% as_factor())
+
+
+# Statistical Analysis ----------------------------------------------------
+fixations.first.missing = fixations.first %>% filter(firstDwell.angry %>% is.na()) %>% pull(subject) %>% unique() %>% sort()
+fixations.first %>% pull(subject) %>% unique() %>% setdiff(fixations.first.missing) %>% length() %>% paste0("N = ", .)
+
+fixations.first %>% 
+  filter(subject %in% fixations.first.missing == F) %>% 
+  mutate(firstDwell.angry = firstDwell.angry - .5) %>% #interpretability of intercept
+  ez::ezANOVA(dv = firstDwell.angry, wid = subject,
+              within = .(SOA, angry),
+              between = paradigm,
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+# paradigm x angry
+fixations.first %>% 
+  filter(subject %in% fixations.first.missing == F) %>% 
+  filter(paradigm == "Dot Probe") %>% 
+  mutate(firstDwell.angry = firstDwell.angry - .5) %>% #interpretability of intercept
+  ez::ezANOVA(dv = firstDwell.angry, wid = subject,
+              within = .(SOA, angry),
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+fixations.first %>% 
+  filter(subject %in% fixations.first.missing == F) %>% 
+  filter(paradigm == "Dual Probe") %>% 
+  mutate(firstDwell.angry = firstDwell.angry - .5) %>% #interpretability of intercept
+  ez::ezANOVA(dv = firstDwell.angry, wid = subject,
+              within = .(SOA, angry),
+              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+
+
+fixations.first %>% summarize(.by = -c(subject, firstDwell.angry),
+                              firstDwell.angry.se = se(firstDwell.angry, na.rm=T),
+                              firstDwell.angry = mean(firstDwell.angry, na.rm=T)) %>% 
+  ggplot(aes(x = angry, y = firstDwell.angry, color = SOA)) +
+  facet_wrap(~paradigm) +
+  geom_hline(yintercept = .5, color = "black", linetype = "dashed") +
+  geom_errorbar(aes(ymin = firstDwell.angry - firstDwell.angry.se, ymax = firstDwell.angry + firstDwell.angry.se)) +
+  geom_point()
