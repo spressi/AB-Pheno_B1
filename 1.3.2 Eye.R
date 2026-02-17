@@ -13,7 +13,7 @@ library("DescTools")
   #baseline validation
   baseline = c(-300, 0) #Baseline in ms relative to stimulus onset; min(baseline) = start; max(baseline) = end
   useAllBaselines = list() #manually allow all baselines for some participants?
-  saveBaselinePlots = T
+  saveBaselinePlots = F
   driftPlots = T #c("vp30", "vp33")
   maxDeviation_rel = 3 #max abs value of z-score
   outlierLimit.eye = .5 #maximum percentage of invalid baselines per subject
