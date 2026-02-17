@@ -53,14 +53,14 @@ behavior = behavior %>%
          #distractors
   mutate(angry = case_when(distractor_left %>% grepl("category1", .) ~ "left",
                            distractor_right %>% grepl("category1", .) ~ "right",
-                           T ~ NA) %>% as_factor(),
+                           T ~ NA) %>% factor(levels = c("left", "right")), #left = first level
          across(starts_with("distractor_"), \(x) x %>% gsub("category\\d+/", "", .) %>% gsub(".jpg", "", .)),
          
          #targets: Dot Probe
          across(starts_with("target_"), \(x) if_else(x == "NA", NA, x)),
          target_dotprobe = case_when(target_right %>% is.na() ~ "left",
                                      target_left %>% is.na() ~ "right",
-                                     T ~ NA) %>% as_factor(),
+                                     T ~ NA) %>% factor(levels = c("left", "right")), #left = first level
          congruency_dotprobe = if_else(angry == target_dotprobe, "angry", "neutral") %>% as_factor(),
          targetKind_dotprobe = case_when(target_right %>% is.na() ~ target_left,
                                          target_left %>% is.na() ~ target_right,
