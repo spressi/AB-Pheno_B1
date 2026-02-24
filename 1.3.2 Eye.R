@@ -637,7 +637,7 @@ eye.valid.trial %>% group_by(subject) %>%
             valid.p = valid.n / trials.N) %>% 
   summarize(n = sum(valid.p > validFixTime.subj),
             n_ex = sum(valid.p <= validFixTime.subj) + {fixations %>% pull(subject) %>% unique() %>% setdiff(vpn.eye) %>% length()},
-            p = n / (n + n_ex))
+            retention = n / (n + n_ex))
 
 #exclude trials with insufficient valid fixations (need not be validated for their baseline)
 # fixations.valid = eye.valid.trial %>% filter(valid > validFixTime.trial) %>% select(subject, block, trial) %>% 
@@ -734,4 +734,5 @@ fixations.first %>% summarize(.by = -c(subject, firstDwell.angry),
   facet_wrap(~paradigm) +
   geom_hline(yintercept = .5, color = "black", linetype = "dashed") +
   geom_errorbar(aes(ymin = firstDwell.angry - firstDwell.angry.se, ymax = firstDwell.angry + firstDwell.angry.se)) +
-  geom_point()
+  geom_point() + 
+  myGgTheme
