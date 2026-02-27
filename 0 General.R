@@ -3,6 +3,7 @@ library(tidyverse)
 exclusions = c()
 
 trials.N = 576
+trials.N.block = trials.N/2
 hz.eeg = 500
 hz.et = 250
 
