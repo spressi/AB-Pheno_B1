@@ -245,9 +245,10 @@ read_tsv(paste0(path.eye %>% gsub("/Summary", "/test/Summary", .), "Fixations.tx
          end = if_else(end < 0, 0, end),
          dur = end - start) %>% 
   filter(dur > 0) %>% 
-  ggplot(aes(x = CURRENT_FIX_X, y = CURRENT_FIX_Y, color = RECORDING_SESSION_LABEL, size = dur)) +
+  rename(subject = RECORDING_SESSION_LABEL) %>% 
+  ggplot(aes(x = CURRENT_FIX_X, y = CURRENT_FIX_Y, color = subject, size = dur)) +
   geom_rect(color="black", fill=NA, xmin = 0, xmax = screen.width.px, ymin = 0, ymax = screen.height.px, inherit.aes = F) +
-  geom_path(aes(group = interaction(RECORDING_SESSION_LABEL, TRIAL_LABEL)), size=1, alpha = .125) +
+  geom_path(aes(group = interaction(subject, TRIAL_LABEL)), size=1, alpha = .125) +
   geom_point(alpha = .25) + 
   scale_color_viridis_d() + myGgTheme
 
@@ -267,9 +268,10 @@ read_tsv(paste0(path.eye, "Fixations.txt"), locale = locale(decimal_mark = ","))
          end = if_else(end < 0, 0, end),
          dur = end - start) %>% 
   filter(dur > 0) %>% 
-  ggplot(aes(x = CURRENT_FIX_X, y = CURRENT_FIX_Y, color = RECORDING_SESSION_LABEL, size = dur)) +
+  rename(subject = RECORDING_SESSION_LABEL) %>% 
+  ggplot(aes(x = CURRENT_FIX_X, y = CURRENT_FIX_Y, color = subject, size = dur)) +
   facet_grid(rows = vars(angry), cols = vars(targetSide), labeller = "label_both") +
   geom_rect(color="black", fill=NA, xmin = 0, xmax = screen.width.px, ymin = 0, ymax = screen.height.px, inherit.aes = F) +
-  #geom_path(aes(group = interaction(RECORDING_SESSION_LABEL, TRIAL_LABEL)), size=1, alpha = .125) +
+  #geom_path(aes(group = interaction(subject, TRIAL_LABEL)), size=1, alpha = .125) +
   geom_point(alpha = 1/2^6) + guides(color = "none") +
   scale_color_viridis_d() + myGgTheme
