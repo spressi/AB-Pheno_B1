@@ -71,15 +71,27 @@ eeg.markers.long = eeg.markers %>%
          rt = stimToResp - SOA) %>% 
   mutate(.by = c(subject, block), 
          respToNextStim = (lead(sample_stim) - sample_response) / hz.eeg * 1000,
-         stimToNextStim = (lead(sample_stim) - sample_stim) / hz.eeg * 1000)
+         stimToNextStim = (lead(sample_stim) - sample_stim) / hz.eeg * 1000,
+         stimToNextResp = (lead(sample_response) - sample_stim) / hz.eeg * 1000)
 eeg.markers.long %>% select(-contains("sample")) %>% 
   filter(#.by = subject,
-         stimToResp == min(stimToResp, na.rm=T) | 
-           #respToNextStim == min(respToNextStim, na.rm=T) |
-           stimToNextStim == min(stimToNextStim, na.rm=T) |
-           stimToResp == max(stimToResp, na.rm=T) | 
-           #respToNextStim == max(respToNextStim, na.rm=T) |
-           stimToNextStim == max(stimToNextStim, na.rm=T)) %>% arrange(rt)
+    stimToResp == min(stimToResp, na.rm=T) |
+      stimToResp == max(stimToResp, na.rm=T) |
+      #respToNextStim == min(respToNextStim, na.rm=T) |
+      #respToNextStim == max(respToNextStim, na.rm=T) |
+      stimToNextStim == min(stimToNextStim, na.rm=T) |
+      stimToNextStim == max(stimToNextStim, na.rm=T)
+  ) %>% arrange(rt) #%>% relocate(stimToResp, stimToNextStim)
+
+eeg.markers.long %>% select(-contains("sample")) %>% 
+  filter(value_response == 99) %>% 
+  filter(stimToResp == min(stimToResp, na.rm=T) |
+           stimToResp == max(stimToResp, na.rm=T) |
+           stimToNextResp == min(stimToNextResp, na.rm=T)
+  ) %>% arrange(rt) %>% relocate(stimToResp, stimToNextResp)
+#max time to correct response: 2010 ms
+#min time to NEXT correct response: 2024 ms
+# => barely not overlapping!
   
 # Impedances --------------------------------------------------------------
 files.eeg.headers = list.files(path.eeg.raw, pattern = ".vhdr", full.names = T)
