@@ -44,6 +44,10 @@ eeg.long %>% summarize(.by = c(paradigm, side),
 
 # Reliabilities -----------------------------------------------------------
 #TODO spearman brown correction
-with(eeg, cor.test(N2pc_Even, N2pc_Odd)) %>% apa::cor_apa()
-with(eeg, cor.test(N2pc_AN_Even, N2pc_AN_Odd)) %>% apa::cor_apa()
-with(eeg, cor.test(N2pc_NA_Even, N2pc_NA_Odd)) %>% apa::cor_apa()
+with(eeg, cor.test(N2pc_Even, N2pc_Odd)) %>% apa::cor_apa(r_ci=T)
+with(eeg, cor.test(N2pc_AN_Even, N2pc_AN_Odd)) %>% apa::cor_apa(r_ci=T)
+with(eeg, cor.test(N2pc_NA_Even, N2pc_NA_Odd)) %>% apa::cor_apa(r_ci=T)
+
+eeg %>% summarize(.by = paradigm,
+                  rel = cor.test(N2pc_Even, N2pc_Odd) %>% apa::cor_apa(r_ci=T, print=F),
+                  rel_sb = cor(N2pc_Even, N2pc_Odd) %>% spearmanBrown())
