@@ -36,10 +36,10 @@ eeg.long %>% summarize(.by = side,
 eeg.long %>% summarize(.by = c(paradigm, side),
                        N2pc.se = se(N2pc, na.rm=T),
                        N2pc = mean(N2pc, na.rm=T)) %>% 
-  ggplot((aes(y = N2pc, x = side, color = paradigm))) +
+  ggplot(aes(y = N2pc, x = side, color = paradigm)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_errorbar(aes(ymin = N2pc - N2pc.se, ymax = N2pc + N2pc.se)) +
-  geom_point() + 
+  geom_errorbar(aes(ymin = N2pc - N2pc.se, ymax = N2pc + N2pc.se), linewidth=2, position = dodge) +
+  geom_point(size = 6, position = dodge) + 
   myGgTheme
 
 # Reliabilities -----------------------------------------------------------
