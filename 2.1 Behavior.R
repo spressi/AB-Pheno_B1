@@ -29,13 +29,32 @@ behavior.aov.dot %>%
               within = .(SOA, congruency),
               type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
 
-behavior.aov.dot %>% summarize(.by = c(SOA, congruency),
+plot.rt.dot_probe = behavior.aov.dot %>% summarize(.by = c(SOA, congruency),
                                rt.se = se(rt), rt = mean(rt)) %>% 
   ggplot(aes(x = SOA, y = rt, color = congruency)) +
   geom_errorbar(aes(ymin=rt-rt.se*1.96, ymax=rt+rt.se*1.96), linewidth=2, position = dodge) +
   geom_point(size=6, position = dodge) +
-  labs(y = "RT (ms)") +
+  labs(y = "RT (ms)", x = "SOA (ms)") +
   myGgTheme
+ggsave("plots/RT Dot Probe.png", plot=plot.rt.dot_probe, scale=1, device="png", dpi=300, units="px", width = 1920, height = 1080)
+
+plot.rtbias.dot_probe =
+  behavior.aov.dot %>% summarize(.by = c(subject, SOA, congruency),
+                                 rt = mean(rt)) %>% 
+  pivot_wider(names_from = congruency, values_from = rt) %>% 
+  mutate(bias = angry - neutral) %>% 
+  summarize(.by = c(SOA),
+            rtbias = mean(bias),
+            rtbias.se = se(bias)) %>% 
+  ggplot(aes(x = SOA, y = rtbias, color = SOA)) +
+  geom_hline(yintercept = 0) +
+  #geom_col(color = "black") +
+  geom_point(size=6) +
+  geom_errorbar(aes(ymin=rtbias-rtbias.se*1.96, ymax=rtbias+rtbias.se*1.96), linewidth=2, width=.5) +
+  labs(y = "RT-Bias (ms)", x = "SOA (ms)") +
+  scale_color_manual(values = c("#FFC000", "red"), guide="none") + #relate to color coding of hypervigilence-avoidance slide
+  myGgTheme
+ggsave("plots/RT-Bias Dot Probe.png", plot=plot.rtbias.dot_probe, scale=1, device="png", dpi=300, units="px", width = 1920, height = 1080)
 
 with(behavior.aov.dot %>% filter(SOA=="100") %>% pivot_wider(names_from = congruency, values_from = rt), 
      t.test(neutral, angry, paired=T)) %>% apa::t_apa(es_ci=T)
