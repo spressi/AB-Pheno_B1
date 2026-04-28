@@ -34,11 +34,6 @@ library(tidyverse)
 #source("0 General.R")
 if (exists("allfixtab")) rm("allfixtab"); if (exists("allsactab")) rm("allsactab"); if (exists("allmsgtab")) rm("allmsgtab")
 
-distance = 650 #screen center to subject eyes in mm
-screen.width.mm = 520 #screen width in mm
-screen.width.px = 1920 #screen width in pixels
-screen.height.px = 1200 #screen height in pixels (only for plot)
-
 options(warn=2)  # Halt on warnings
 
 helpers.dir = "eyeScoring/"

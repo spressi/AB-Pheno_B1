@@ -27,10 +27,6 @@ library("DescTools")
   showTrialPlots = F
   unifyRois = T
   
-  screen.width <- 1920 ; screen.height <- 1080 #screen resolution (TODO: model & size of screen)
-  pixsize <- 520 / screen.width  # Pixel size in mm (for scan path length)
-  distance = 650 #screen center to subject eyes in mm
-  
   indifference.zone = 100 #pixels away from center to count as looking to face
   
   z.max = 2 #Winsorize dependent variables to a z value of 2
@@ -329,8 +325,8 @@ library("DescTools")
         if (driftPlots==T || code %in% driftPlots || as.character(code) %in% driftPlots) {
           blplot = baseline.vp %>% mutate(trial=1:n()) %>% 
             ggplot(aes(x=x, y=y, color=trial)) + 
-            xlim(0, screen.width) + ylim(0, screen.height) + #restrict area to screen
-            geom_rect(xmin=0, ymin=0, xmax=screen.width, ymax=screen.height, color="black", fill=NA) +
+            xlim(0, screen.width.px) + ylim(0, screen.height) + #restrict area to screen
+            geom_rect(xmin=0, ymin=0, xmax=screen.width.px, ymax=screen.height, color="black", fill=NA) +
             geom_hline(yintercept=mean_y, linetype="longdash") + geom_vline(xintercept = mean_x, linetype="longdash") #centroid of valid baselines
           
           #add borders depending on whether point distance was used (circles) or not (rectangles)
@@ -358,7 +354,7 @@ library("DescTools")
           blplot = blplot + 
             geom_point() + scale_color_continuous(low="blue", high="green") + #all points (color coded by trial)
             geom_point(data=baseline.vp %>% filter(blok==F), mapping=aes(x=x, y=y), color="red") + #invalid baselines red
-            geom_point(x=screen.width/2, y=screen.height/2, shape="+", size=5, color="black") + #fixation cross
+            geom_point(x=screen.width.px/2, y=screen.height/2, shape="+", size=5, color="black") + #fixation cross
             #theme(panel.border = element_rect(color = "black", fill=NA, size=5)) +
             coord_fixed() +
             ggtitle(paste0(prefix, code, postfix, " (", round(invalid, digits=2)*100, "% out, ", round(nas, digits=2)*100, "% NAs)"))
@@ -374,9 +370,9 @@ library("DescTools")
           #x11() #plot in new windows (max of 63)
           png(filename, 
               width=1920, height=1080)
-          plot(baseline.vp$x, baseline.vp$y, pch=16, col=ifelse(baseline.vp$blok==0, "red", "black"), xlab="x (px)", ylab="y (px)", xlim=c(0, screen.width), ylim=c(0, screen.height), asp=1)
+          plot(baseline.vp$x, baseline.vp$y, pch=16, col=ifelse(baseline.vp$blok==0, "red", "black"), xlab="x (px)", ylab="y (px)", xlim=c(0, screen.width.px), ylim=c(0, screen.height), asp=1)
           title(paste0(prefix, code, postfix, " (", round(invalid, digits=2)*100, "% out, ", round(nas, digits=2)*100, "% NAs)"))
-          abline(h=c(mean_y, screen.height), v=mean_x); abline(v=borders.rel.x, h=borders.rel.y, col="red"); points(x=mean(c(0, screen.width)), y=screen.height/2, pch=3, col="blue")
+          abline(h=c(mean_y, screen.height), v=mean_x); abline(v=borders.rel.x, h=borders.rel.y, col="red"); points(x=mean(c(0, screen.width.px)), y=screen.height/2, pch=3, col="blue")
           
           dev.off()
         }
@@ -441,9 +437,9 @@ library("DescTools")
         mutate(x.cent = x - bl.corr.x,
                y.cent = y - bl.corr.y,
                dist = sqrt(x.cent^2 + y.cent^2), #distance from center
-               x = x - bl.corr.x + screen.width/2, 
+               x = x - bl.corr.x + screen.width.px/2, 
                y = y - bl.corr.y + screen.height/2,
-               x.roi = {x - screen.width/2 + 1 + dim(roi)[2]/2} %>% round(), #old coordinate minus half screen + 1 => middle of screen & roi = 1. this + half roi => 1 = most left column of roi
+               x.roi = {x - screen.width.px/2 + 1 + dim(roi)[2]/2} %>% round(), #old coordinate minus half screen + 1 => middle of screen & roi = 1. this + half roi => 1 = most left column of roi
                y.roi = {screen.height - y - screen.height/2 + 1 + dim(roi)[1]/2} %>% round(), #same as with x but reverse y-direction first (currently up = bigger but down = bigger needed for matrix indexing)
                #inRoi = ifelse(x.roi > 0 & y.roi > 0 & x.roi <= dim(roi)[2] & y.roi <= dim(roi)[1], roi[y.roi, x.roi], FALSE), #if coordinates within bounds of roi matrix, look up in matrix, else FALSE #doesn't work because whole vector is evaluated and throws error even though result FALSE shall be used
                start = start - onset, #start of exposition = time_0
@@ -513,22 +509,22 @@ library("DescTools")
       if (showTrialPlots) {
         picPath = list.files(paste0(path.rois, ".."), "png", full.names=T); picPath = picPath[picPath %>% grep(condition, .)]
         #picPath = list.files(paste0(path.rois, ".."), "jpg", full.names=T)[condition%/%10 * 2-1 + round((condition%%10-1)/6)]
-        fixationCross = head(fixations.trial.analysis, 1) %>% mutate(start = 0, end = 0, x = screen.width/2, y = screen.height/2, roi="no ROI", dur=0)
+        fixationCross = head(fixations.trial.analysis, 1) %>% mutate(start = 0, end = 0, x = screen.width.px/2, y = screen.height/2, roi="no ROI", dur=0)
         fixations.trial.plot = rbind(fixationCross, fixations.trial.analysis) %>% mutate(roi = factor(roi, levels=c("diagnostic", "non-diagnostic", "no ROI")))
         { fixations.trial.plot %>% ggplot(aes(x=x, y=y)) + 
             annotation_custom(grid::rasterGrob(
               png::readPNG(picPath),
               #jpeg::readJPEG(picPath),
               width=unit(1,"npc"), height=unit(1,"npc")), 
-              xmin = screen.width/2-642/2, xmax = screen.width/2+642/2, 
+              xmin = screen.width.px/2-642/2, xmax = screen.width.px/2+642/2, 
               ymin = screen.height/2-676/2, ymax = screen.height/2+676/2) +
-            geom_point(aes(x=screen.width/2, y=screen.height/2), color="blue", shape="+", size=5) + #fixation cross
+            geom_point(aes(x=screen.width.px/2, y=screen.height/2), color="blue", shape="+", size=5) + #fixation cross
             #geom_point(aes(x=x[2], y=y[2], size=dur[2]), shape=21) + #first fixation after fix cross accentuated
             geom_point(aes(size=dur, color=roi), alpha=.25) + geom_path() + #all fixations as transparent circles with fill
             #geom_point(aes(size=dur, color=inRoi), shape=21) + geom_path() + #all fixations as opaque circles without fill with path
-            #geom_rect(mapping=aes(xmin=0, xmax=screen.width, ymin=0, ymax=screen.height), fill=NA, color="black") + #screen border
-            #xlim(0, screen.width) + ylim(0, screen.height) + #full screen
-            scale_x_continuous(limits=c(screen.width/2-642/2, screen.width/2+642/2), expand=c(0,0)) +
+            #geom_rect(mapping=aes(xmin=0, xmax=screen.width.px, ymin=0, ymax=screen.height), fill=NA, color="black") + #screen border
+            #xlim(0, screen.width.px) + ylim(0, screen.height) + #full screen
+            scale_x_continuous(limits=c(screen.width.px/2-642/2, screen.width.px/2+642/2), expand=c(0,0)) +
             scale_y_continuous(limits=c(screen.height/2-676/2, screen.height/2+676/2), expand=c(0,0)) +
             coord_fixed() + ggtitle(paste0(code, ": trial ", i.total, ", condition ", condition)) + 
             scale_size(range = c(3, 10)) +
@@ -724,19 +720,19 @@ baselines.summary %>% group_by(subject) %>% summarize(invalid = mean(invalid)) %
 
 # ROI analysis ------------------------------------------------------------
 fixations.valid = fixations.valid %>% 
-  mutate(ROI.side = case_when(x <= screen.width/2 - indifference.zone ~ "left",
-                              x >= screen.width/2 + indifference.zone ~ "right",
+  mutate(ROI.side = case_when(x <= screen.width.px/2 - indifference.zone ~ "left",
+                              x >= screen.width.px/2 + indifference.zone ~ "right",
                               T ~ NA),
          ROI = if_else(ROI.side == angry, "angry", "neutral"))
   
 # fixations.valid %>% ggplot(aes(x = x, y = y, group = interaction(subject, trial), color = ROI.side)) +
-#   geom_rect(xmax=screen.width/2-indifference.zone, xmin=-Inf, ymin=-Inf, ymax=+Inf, fill="blue", alpha=.2) +
-#   geom_rect(xmin=screen.width/2+indifference.zone, xmax=+Inf, ymin=-Inf, ymax=+Inf, fill="red", alpha=.2) +
+#   geom_rect(xmax=screen.width.px/2-indifference.zone, xmin=-Inf, ymin=-Inf, ymax=+Inf, fill="blue", alpha=.2) +
+#   geom_rect(xmin=screen.width.px/2+indifference.zone, xmax=+Inf, ymin=-Inf, ymax=+Inf, fill="red", alpha=.2) +
 #   geom_point(alpha=.1) + #geom_line(alpha=.1) +
 #   myGgTheme
 fixations.valid %>% ggplot(aes(x = x, fill = ROI.side)) +
-  geom_histogram(boundary = screen.width/2, binwidth = indifference.zone/2, color = "black") +
-  #geom_vline(xintercept = c(-indifference.zone, +indifference.zone) + screen.width/2, linetype = "dashed", color = "red") +
+  geom_histogram(boundary = screen.width.px/2, binwidth = indifference.zone/2, color = "black") +
+  #geom_vline(xintercept = c(-indifference.zone, +indifference.zone) + screen.width.px/2, linetype = "dashed", color = "red") +
   myGgTheme
 
 fixations.first = fixations.valid %>% 
