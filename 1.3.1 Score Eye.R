@@ -32,8 +32,6 @@
 
 library(tidyverse)
 #source("0 General.R")
-if (exists("allfixtab")) rm("allfixtab"); if (exists("allsactab")) rm("allsactab"); if (exists("allmsgtab")) rm("allmsgtab")
-
 distance = 650 #screen center to subject eyes in mm
 screen.width.mm = 520 #screen width in mm
 screen.width.px = 1920 #screen width in pixels
@@ -60,6 +58,7 @@ toCode = function(x, prefix="vp", postfix="") x %>% toPhysString() %>% paste0(pr
 winpix <- distance * tan(pi/180) * screen.width.px/screen.width.mm
 
 vpn <- list.files(path.eye.raw, pattern=".txt", full.names = T)
+if (exists("allfixtab")) rm("allfixtab"); if (exists("allsactab")) rm("allsactab"); if (exists("allmsgtab")) rm("allmsgtab")
 for (vp in vpn) {
   #vp = head(vpn, 1)
   #vp = sample(vpn, 1)
