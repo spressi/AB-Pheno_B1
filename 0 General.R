@@ -13,6 +13,14 @@ targetTime = 1500
 
 expoID = "*" #all messages are beginning of trial
 
+distance = 650 #screen center to subject eyes in mm
+screen.width.mm = 520 #screen width in mm
+screen.width.px = 1920 #screen width in pixels
+screen.height.px = 1200 #screen height in pixels (only for plot)
+pixsize = screen.width.mm / screen.width.px  # Pixel size in mm (for scan path length)
+distance = 650 #screen center to subject eyes in mm
+
+
 # Paths -------------------------------------------------------------------
 path = "C:/Data/AB_B1/Data/" #@work
 #path = path %>% gsub("C:/Data", "D:/Arbeit", .) #@home

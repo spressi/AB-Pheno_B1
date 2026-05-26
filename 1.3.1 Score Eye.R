@@ -39,6 +39,10 @@ screen.width.px = 1920 #screen width in pixels
 screen.height.px = 1200 #screen height in pixels (only for plot)
 
 #options(warn=2)  # Halt on warnings
+=======
+if (exists("allfixtab")) rm("allfixtab"); if (exists("allsactab")) rm("allsactab"); if (exists("allmsgtab")) rm("allmsgtab")
+
+options(warn=2)  # Halt on warnings
 
 helpers.dir = "eyeScoring/"
 source(paste0(helpers.dir, "eventdetection_lowspeed.R"))
