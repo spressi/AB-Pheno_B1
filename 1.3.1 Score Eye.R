@@ -33,11 +33,12 @@
 library(tidyverse)
 #source("0 General.R")
 distance = 650 #screen center to subject eyes in mm
-screen.width.mm = 520 #screen width in mm
+#monitor: Dell U2412M
+screen.width.mm = 518.4 #screen width in mm
 screen.width.px = 1920 #screen width in pixels
 screen.height.px = 1200 #screen height in pixels (only for plot)
 
-options(warn=2)  # Halt on warnings
+#options(warn=2)  # Halt on warnings
 
 helpers.dir = "eyeScoring/"
 source(paste0(helpers.dir, "eventdetection_lowspeed.R"))
@@ -232,12 +233,6 @@ write.table(allsactab,paste(path.eye,"Saccades.txt",sep=""),sep="\t",dec=",",quo
 # Check Eye Calib ---------------------------------------------------------
 read_tsv(paste0(path.eye %>% gsub("/Summary", "/test/Summary", .), "Fixations.txt"), locale = locale(decimal_mark = ",")) %>% 
   left_join(read_tsv(paste0(path.eye %>% gsub("/Summary", "/test/Summary", .), "Messages.txt"), locale = locale(decimal_mark = ",")), by = c("RECORDING_SESSION_LABEL", "TRIAL_LABEL")) %>% 
-  separate(CURRENT_MSG_TEXT, c("distractL", "targetL", NA, "distractR", "targetR"), sep = " ") %>% 
-  mutate(angry = if_else(distractL %>% grepl("category1", .), "left", "right"),
-         targetSide = if_else(targetL=="NA", "right", "left"),
-         congruency = if_else(angry==targetSide, "congruent", "incongruent"),
-         targetKind = if_else(targetSide=="left", targetL, targetR)) %>% 
-  #select(-(1:7)) %>% unique() #for checking
   mutate(start = CURRENT_FIX_START - CURRENT_MSG_TIME,
          start = if_else(start < 0, 0, start),
          end = CURRENT_FIX_END - CURRENT_MSG_TIME,
