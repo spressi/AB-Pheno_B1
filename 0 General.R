@@ -8,6 +8,8 @@ trials.N.block = trials.N/2
 hz.eeg = 500
 hz.et = 250
 
+trials.min = 20 #minimum amount of trials per subject
+
 prestim = 1000
 poststim = c(100, 500) #SOA
 targetTime = 1500
@@ -34,7 +36,7 @@ path.eye.raw = "Eye/" %>% paste0(path, .)
 path.eye = "Summary/" %>% paste0(path.eye.raw, .)
 
 path.eeg.raw = "EEG/" %>% paste0(path, .)
-path.eeg = "" #TODO preprocessed files
+path.eeg = "export/EEGlab.csv" %>% paste0(path.eeg.raw, .)
 
 path.rds = "" #project root directory
 
