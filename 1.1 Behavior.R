@@ -193,6 +193,7 @@ behavior.valid = behavior %>% filter(response %>% is.na() == F,
 #behavior.valid %>% pull(rt) %>% quantile(seq(.95, 1, .005))
 #behavior.valid %>% filter(rt > targetTime) %>% select(subject, trial, rt, response_dotprobe, contains("time_"), SOA, iti) %>% View("excessive RTs")
 
-#TODO prereg: RTs will be winsorized to 2 SDs within each subject
+behavior.valid %>% mutate(rt.win = rt %>% Winsorize.z(z = c(-2, 2))) %>% relocate(rt.win, .after=rt) %>% filter(rt.win != rt)
+behavior.valid = behavior.valid %>% mutate(rt = rt %>% Winsorize.z(z = c(-2, 2)))
 
 #behavior.valid %>% write_rds("behavior.valid.rds" %>% paste0(path.rds, .))

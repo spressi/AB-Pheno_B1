@@ -1,4 +1,5 @@
 library(tidyverse)
+library(DescTools) #for Winsorize
 
 exclusions = c()
 
@@ -39,6 +40,12 @@ path.rds = "" #project root directory
 
 
 # Functions ---------------------------------------------------------------
+Winsorize.z = function(x, z = c(-2, 2), ...) {
+  low = mean(x, na.rm=T) + sd(x, na.rm=T) * min(z)
+  high = mean(x, na.rm=T) + sd(x, na.rm=T) * max(z)
+  DescTools::Winsorize(x, val = c(low, high), ...)
+}
+
 checkContent = function(df, col, p.denominator=NA, print=T) {
   #symbol handling
   if (suppressWarnings(is.na(rlang::enexpr(p.denominator)) == F) && #p.denominator=NA
