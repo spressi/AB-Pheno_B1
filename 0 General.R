@@ -40,12 +40,22 @@ path.rds = "" #project root directory
 
 
 # Functions ---------------------------------------------------------------
+#preprocessing
+pathToCode = function(path, path.sep="/", file.ext="\\.") {
+  first = path %>% gregexpr(path.sep, .) %>% lapply(max) %>% unlist() %>% {. + 1} %>% 
+    pmax(1, .) #if first not found, set it to start of string
+  last = path %>% gregexpr(file.ext, .) %>% lapply(max) %>% unlist() %>% {. - 1}
+  last = ifelse(last < 1, sapply(path, str_length), last) #if last cannot be found, set it to end of string
+  return(path %>% substring(first, last))
+}
+
 Winsorize.z = function(x, z = c(-2, 2), ...) {
   low = mean(x, na.rm=T) + sd(x, na.rm=T) * min(z)
   high = mean(x, na.rm=T) + sd(x, na.rm=T) * max(z)
   DescTools::Winsorize(x, val = c(low, high), ...)
 }
 
+#descriptives
 checkContent = function(df, col, p.denominator=NA, print=T) {
   #symbol handling
   if (suppressWarnings(is.na(rlang::enexpr(p.denominator)) == F) && #p.denominator=NA
@@ -78,18 +88,11 @@ checkContent = function(df, col, p.denominator=NA, print=T) {
 
 descriptives.list = list(m = mean, sd = sd, min = min, max = max)
 
-pathToCode = function(path, path.sep="/", file.ext="\\.") {
-  first = path %>% gregexpr(path.sep, .) %>% lapply(max) %>% unlist() %>% {. + 1} %>% 
-    pmax(1, .) #if first not found, set it to start of string
-  last = path %>% gregexpr(file.ext, .) %>% lapply(max) %>% unlist() %>% {. - 1}
-  last = ifelse(last < 1, sapply(path, str_length), last) #if last cannot be found, set it to end of string
-  return(path %>% substring(first, last))
-}
-
 se = function(x, na.rm = FALSE) {
   sd(x, na.rm) / sqrt(if(!na.rm) length(x) else sum(!is.na(x)))
 }
 
+#statistical analysis
 correlation_out = function(coroutput) {
   names = coroutput$data.name %>% strsplit(" and ") %>% unlist()
   cat(paste0("r(", names[1], ", ", names[2], "): ", coroutput %>% apa::cor_apa(print=F)), "\n")
@@ -131,6 +134,7 @@ lmer.ci = function(lmer, conf.level = .95, twotailed=T) {
   }
 }
 
+#plotting
 dodge.width = .6
 dodge = position_dodge(width=dodge.width)
 
