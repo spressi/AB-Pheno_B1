@@ -193,6 +193,6 @@ behavior.valid = behavior %>% filter(response %>% is.na() == F,
 #behavior.valid %>% pull(rt) %>% quantile(seq(.95, 1, .005))
 #behavior.valid %>% filter(rt > targetTime) %>% select(subject, trial, rt, response_dotprobe, contains("time_"), SOA, iti) %>% View("excessive RTs")
 
-#TODO Winsorize RTs to targetTime? (button press during ITI is still recorded and evaluated)
+#TODO prereg: RTs will be winsorized to 2 SDs within each subject
 
 #behavior.valid %>% write_rds("behavior.valid.rds" %>% paste0(path.rds, .))
