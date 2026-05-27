@@ -39,8 +39,29 @@ path.rds = "" #project root directory
 
 
 # Functions ---------------------------------------------------------------
-checkContent = function(df, col, print=T) {
-  result = df %>% count(!!rlang::ensym(col), .drop=F) %>% arrange(desc(n))
+checkContent = function(df, col, p.denominator=NA, print=T) {
+  #symbol handling
+  if (suppressWarnings(is.na(rlang::enexpr(p.denominator)) == F) && #p.denominator=NA
+      exists(rlang::enexpr(p.denominator)) == F && #not a variable in global environment
+      rlang::enexpr(p.denominator) %>% rlang::is_symbol()) { #column name passed without quotation
+    p.denominator = rlang::ensym(p.denominator) %>% as.character() #cast column name to character for further evaluation
+  }
+  
+  #type handling
+  if (p.denominator %>% is.na() == F) { #not NA (for sum(n))
+    if (p.denominator %>% is.numeric() == F) { #not numeric => must be a column name
+      if (p.denominator %>% match(df %>% colnames()) %>% is.na()) {
+        stop(paste(p.denominator, ": Column not found in data frame"))
+      } else {
+        p.denominator = df %>% pull(!!p.denominator) %>% unique() %>% length()
+      }
+    }
+  }
+  
+  #if (p.denominator %>% is.na() == F && p.denominator %>% is.numeric() == F) warning("p.denominator not numeric. Using sum(n).")
+  result = df %>% count(!!rlang::ensym(col), .drop=F) %>% 
+    arrange(desc(n)) %>% 
+    mutate(p = n / if_else(p.denominator %>% is.numeric(), p.denominator, sum(n)))
   if (print) {
     result %>% print(n = nrow(.))
     return(invisible(result))
