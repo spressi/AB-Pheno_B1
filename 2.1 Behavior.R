@@ -24,10 +24,12 @@ behavior.aov %>% summarize(.by = c(paradigm, SOA, congruency),
 # Dot Probe only
 behavior.aov.dot = behavior.aov %>% filter(paradigm == "Dot Probe")
 
-behavior.aov.dot %>% 
+behavior.aov.dot.result = behavior.aov.dot %>% 
   ez::ezANOVA(dv = rt, wid = subject,
               within = .(SOA, congruency),
-              type=2, detailed=T) %>% apa::anova_apa(force_sph_corr = T)
+              type=2, detailed=T)
+behavior.aov.dot.result %>% apa::anova_apa(force_sph_corr = T)
+behavior.aov.dot.result %>% ez.ci()
 
 print(plot.rt.dot_probe <- 
         behavior.aov.dot %>% summarize(.by = c(SOA, congruency),
@@ -35,7 +37,7 @@ print(plot.rt.dot_probe <-
         ggplot(aes(x = SOA, y = rt, color = congruency)) +
         geom_errorbar(aes(ymin=rt-rt.se*1.96, ymax=rt+rt.se*1.96), linewidth=2, position = dodge) +
         geom_point(size=6, position = dodge) +
-        labs(y = "RT (ms)", x = "SOA (ms)") +
+        labs(y = "RT (ms)", x = "SOA (ms)") + ggtitle("Dot Probe") +
         myGgTheme)
 ggsave("plots/RT Dot Probe.png", plot=plot.rt.dot_probe, scale=1, device="png", dpi=300, units="px", width = 1920, height = 1080)
 
@@ -52,7 +54,7 @@ print(plot.rtbias.dot_probe <-
         #geom_col(color = "black") +
         geom_point(size=6) +
         geom_errorbar(aes(ymin=rtbias-rtbias.se*1.96, ymax=rtbias+rtbias.se*1.96), linewidth=2, width=.5) +
-        labs(y = "RT-Bias (ms)", x = "SOA (ms)") +
+        labs(y = "RT-Bias (ms)", x = "SOA (ms)") + ggtitle("Dot Probe") +
         scale_color_manual(values = c("#FFC000", "red"), guide="none") + #relate to color coding of hypervigilence-avoidance slide
         myGgTheme)
 ggsave("plots/RT-Bias Dot Probe.png", plot=plot.rtbias.dot_probe, scale=1, device="png", dpi=300, units="px", width = 1920, height = 1080)
@@ -81,8 +83,28 @@ behavior.aov.dual %>% summarize(.by = c(SOA, congruency),
   labs(y = "RT (ms)") +
   myGgTheme
 
+print(plot.rtbias.dual_probe <-
+        behavior.aov.dual %>% summarize(.by = c(subject, SOA, congruency),
+                                       rt = mean(rt)) %>% 
+        pivot_wider(names_from = congruency, values_from = rt) %>% 
+        mutate(bias = angry - neutral) %>% 
+        summarize(.by = c(SOA),
+                  rtbias = mean(bias),
+                  rtbias.se = se(bias)) %>% 
+        ggplot(aes(x = SOA, y = rtbias, color = SOA)) +
+        geom_hline(yintercept = 0) +
+        #geom_col(color = "black") +
+        geom_point(size=6) +
+        geom_errorbar(aes(ymin=rtbias-rtbias.se*1.96, ymax=rtbias+rtbias.se*1.96), linewidth=2, width=.5) +
+        labs(y = "RT-Bias (ms)", x = "SOA (ms)") + ggtitle("Dual Probe") +
+        scale_color_manual(values = c("red", "red"), guide="none") + #relate to color coding of hypervigilence-avoidance slide
+        myGgTheme)
+ggsave("plots/RT-Bias Dual Probe.png", plot=plot.rtbias.dual_probe, scale=1, device="png", dpi=300, units="px", width = 1920, height = 1080)
+
 behavior.aov.dual %>% summarize(.by = c(SOA),
                                 rt.se = se(rt), rt = mean(rt))
+
+#TODO RT-Bias plot with facet_wrap on paradigm (check if axis alignment visualizes effects even more clearly)
 
 
 # Analysis: Dual Responses ------------------------------------------------
@@ -109,7 +131,7 @@ behavior.reliability %>% pivot_wider(names_from = c(congruency, split), values_f
   summarize(.by = c(paradigm, SOA),
             reliability = cor.test(neutral_odd - angry_odd, neutral_even - angry_even) %>% apa::cor_apa(r_ci=T, print=F),
             rel_sb = cor(neutral_odd - angry_odd, neutral_even - angry_even) %>% spearmanBrown()) %>% 
-  arrange(rel_sb)
+  arrange(desc(rel_sb))
 #TODO attenutation formula to check how many trials necessary
 
 #RTs
