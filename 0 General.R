@@ -113,7 +113,7 @@ F_apa = function(x) {
       "\n", sep="")
 }
 
-ez.ci = function(ez, conf.level = .95, sph.corr=T) {
+ez.ci = function(ez, conf.level = .9, sph.corr=T) { # 90% CIs are recommended for partial eta² (https://daniellakens.blogspot.com/2014/06/calculating-confidence-intervals-for.html#:~:text=Why%20should%20you%20report%2090%25%20CI%20for%20eta%2Dsquared%3F)
   for (effect in ez$ANOVA$Effect) {
     index.sphericity = which(ez$`Sphericity Corrections`$Effect == effect)
     GGe = ifelse(sph.corr==F || length(index.sphericity)==0, 1, ez$`Sphericity Corrections`$GGe[index.sphericity])
@@ -124,6 +124,26 @@ ez.ci = function(ez, conf.level = .95, sph.corr=T) {
       paste0(collapse=", ") %>% paste0(effect, ": ", round(conf.level*100), "% CI [", ., "]\n") %>% cat()
   }
 }
+
+peta.ci <- #https://spressi.github.io/precision_workshop/2.2_CIs.html#/ci-around-partial-eta%C2%B2-1
+  function(anova_table, conf.level = .9) { # 90% CIs are recommended for partial eta² (https://daniellakens.blogspot.com/2014/06/calculating-confidence-intervals-for.html#:~:text=Why%20should%20you%20report%2090%25%20CI%20for%20eta%2Dsquared%3F)
+    
+    result <- 
+      apply(anova_table, 1, function(x) {
+        ci <- 
+          apaTables::get.ci.partial.eta.squared(
+            F.value = x["F"], df1 = x["num Df"], df2 = x["den Df"], conf.level = conf.level
+          )
+        
+        return(setNames(c(ci$LL, ci$UL), c("LL", "UL")))
+      }) %>% 
+      t() %>% 
+      as.data.frame()
+    
+    result$conf.level <- conf.level
+    
+    return(result)
+  }
 
 lmer.ci = function(lmer, conf.level = .95, twotailed=T) {
   values = lmer %>% summary() %>% .$coefficients %>% .[, c("Estimate", "df")] %>% data.frame()
