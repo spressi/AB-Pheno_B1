@@ -63,6 +63,7 @@ que = que.raw %>% mutate(
   comment = SD07_01
 ) %>% select(subject, sias, stai, age:comment)
 
+#TODO separate into preprocessing and results?
 
 # Samples Descriptives ----------------------------------------------------
 # que %>% summarize(across(c(age, sias, stai),
