@@ -12,10 +12,13 @@ eeg.trial = path.eeg %>% read_csv() %>%
   mutate(N2pc = if_else(angry == "left", P8 - P7, P7 - P8)) %>% relocate(N2pc, .after = angry)
 
 #number of trials
-eeg.trial %>% count(subject) %>% arrange(n)
-eeg.trial %>% count(subject) %>% ggplot(aes(x = n)) + geom_histogram(color = "black") + xlab("Valid EEG Trials") + myGgTheme
 eeg.trial %>% count(subject, angry) %>% filter(n < trials.min) #no subject needs to be excluded according to preregistration
+eeg.trial %>% count(subject) %>% summarize(valid.m = mean(n), valid.sd = sd(n), valid.min = min(n), valid.max = max(n)) #%>% mutate(across(everything(), \(x) x / trials.N))
+eeg.trial %>% count(subject) %>% mutate(p = n / trials.N) %>% arrange(n)
+eeg.trial %>% count(subject) %>% ggplot(aes(x = n)) + geom_histogram(color = "black") + geom_vline(xintercept = trials.min, color = "red", linetype = "dashed", linewidth = 2) + xlab("Valid EEG Trials") + myGgTheme
 
+
+#subject-level aggregates
 eeg = eeg.trial %>% summarize(.by = c(subject, paradigm), N2pc = mean(N2pc)) %>% 
   full_join(eeg.trial %>% summarize(.by = c(subject, paradigm, oddEven), N2pc = mean(N2pc)) %>% 
               pivot_wider(names_prefix = "N2pc_", names_from = oddEven, values_from = N2pc)) %>% 
@@ -49,6 +52,12 @@ eeg = eeg %>% mutate(N2pc = (N2pc_AN+N2pc_NA)/2,
 #   relocate(paradigm, N2pc, N2pc_Odd, N2pc_Even, .before = N2pc_AN)
 
 symdiff(eeg %>% pull(subject), behavior %>% pull(subject)) #TODO: check missing b12
+
+eeg %>% write_rds("eeg.rds" %>% paste0(path.rds, .))
+
+#TODO move upper part to separate preprocessing script (1.2.2 EEG?)
+
+#eeg = read_rds("eeg.rds" %>% paste0(path.rds, .))
 
 with(eeg, t.test(N2pc, alternative="less")) %>% apa::t_apa(es_ci=T)
 
