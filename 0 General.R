@@ -36,7 +36,7 @@ path.eye.raw = "Eye/" %>% paste0(path, .)
 path.eye = "Summary/" %>% paste0(path.eye.raw, .)
 
 path.eeg.raw = "EEG/" %>% paste0(path, .)
-path.eeg = "export/EEGlab.csv" %>% paste0(path.eeg.raw, .)
+path.eeg = "export/" %>% paste0(path.eeg.raw, .)
 
 path.rds = "" #project root directory
 
