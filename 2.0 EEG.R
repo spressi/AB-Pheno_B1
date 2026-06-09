@@ -62,7 +62,7 @@ eeg = eeg.trial %>% eegLabSummary()
 #          N2pc_Even = (N2pc_AN_Even+N2pc_NA_Even)/2) %>% 
 #   relocate(paradigm, N2pc, N2pc_Odd, N2pc_Even, .before = N2pc_AN)
 
-symdiff(eeg %>% pull(subject), behavior %>% pull(subject)) #TODO: check missing b12
+symdiff(eeg %>% pull(subject), behavior %>% pull(subject)) #b12: ground electrode broken => no EEG recording
 
 eeg %>% write_rds("eeg.rds" %>% paste0(path.rds, .))
 
